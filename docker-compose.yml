@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  orchestrator:
+    container_name: orchestrator
+    build:
+      context: ./agent_orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./agent_orchestrator:/app
+    depends_on:
+      - agent_service
+    networks:
+      - agentic-net
+
+  agent_service:
+    container_name: agent_service
+    build:
+      context: ./agent_service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./agent_service:/app
+    networks:
+      - agentic-net
+
+networks:
+  agentic-net:
+    driver: bridge
