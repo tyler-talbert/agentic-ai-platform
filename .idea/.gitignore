@@ -1,0 +1,40 @@
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.shelf/
+workspace.xml
+httpRequests/
+dataSources/
+dataSources.local.xml
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.venv
+.env.*
+*.log
+
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+**/docker-compose.override.yml
+
+# VSCode (if you ever use it)
+.vscode/
