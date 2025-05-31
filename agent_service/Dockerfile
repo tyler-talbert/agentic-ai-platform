@@ -5,3 +5,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_DEFAULT_TIMEOUT=100
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+COPY . .
+
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
