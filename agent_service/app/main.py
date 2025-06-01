@@ -1,7 +1,7 @@
 import asyncio
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.kafka_consumer import consume_kafka_messages
+from .kafka_consumer import consume_kafka_messages
 
 app = FastAPI()
 

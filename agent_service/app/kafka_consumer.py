@@ -1,6 +1,6 @@
 from kafka import KafkaConsumer
-from app.kafka_producer import produce_result
-from app.agent_runner import run_agent
+from .kafka_producer import produce_result
+from .agent_runner import run_agent
 import json
 import asyncio
 import os
