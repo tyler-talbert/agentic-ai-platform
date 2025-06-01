@@ -2,3 +2,4 @@ fastapi
 httpx
 uvicorn[standard]
 confluent-kafka
+kafka-python
