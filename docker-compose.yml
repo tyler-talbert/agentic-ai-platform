@@ -22,9 +22,13 @@ services:
       context: ./agent_service
       dockerfile: Dockerfile
     ports:
-      - "8001:8000"
+      - "4001:4001"
     volumes:
       - ./agent_service:/app
+    environment:
+      KAFKA_BROKER: kafka:9092
+      TOPIC_IN: agent-tasks-inbound
+      TOPIC_OUT: agent-tasks-completed
     depends_on:
       - kafka
     networks:
