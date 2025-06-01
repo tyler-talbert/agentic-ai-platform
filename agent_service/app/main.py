@@ -3,15 +3,13 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from .kafka_consumer import consume_kafka_messages
 
-app = FastAPI()
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     consumer_task = asyncio.create_task(consume_kafka_messages())
     yield
     consumer_task.cancel()
 
-app.router.lifespan_context = lifespan
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/health")
 def health_check():
