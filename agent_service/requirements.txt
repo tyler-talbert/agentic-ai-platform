@@ -1,3 +1,10 @@
 fastapi
 uvicorn[standard]
 kafka-python
+langchain
+langchain-core
+langchain-ollama
+ollama
+python-dotenv
+langchain-openai
+openai

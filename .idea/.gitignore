@@ -38,3 +38,6 @@ Thumbs.db
 
 # VSCode (if you ever use it)
 .vscode/
+
+# Variables
+.env
