@@ -1,9 +1,13 @@
-def run_agent(task: dict) -> dict:
-    """
-    Placeholder logic for now.
-    """
-    print("Running dummy LangChain agent on task:", task)
-    return {
-        "original_task": task,
-        "response": "Dummy LangChain agent response"
-    }
+from langchain_ollama import ChatOllama
+from langchain_core.messages import HumanMessage
+
+def run_agent(task_input: dict) -> str:
+    prompt_text = task_input["input"] if "input" in task_input else str(task_input)
+
+    model = ChatOllama(
+        model="mistral",  # or "llama3"
+        temperature=0.7
+    )
+
+    response = model.invoke([HumanMessage(content=prompt_text)])
+    return response.content
