@@ -1,40 +1,22 @@
+# main.py
 from fastapi import FastAPI
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import httpx
-import json
-from kafka import KafkaProducer
+from app.kafka.producer import init_kafka_producer
 import os
-import time
 
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 TOPIC_IN = os.getenv("TOPIC_IN", "agent-tasks-inbound")
 
-producer = None  # Initialized in lifespan
+producer = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global producer
-    print("[Orchestrator] Starting up and initializing KafkaProducer...", flush=True)
-
-    for attempt in range(10):
-        try:
-            producer = KafkaProducer(
-                bootstrap_servers=[KAFKA_BROKER],
-                value_serializer=lambda v: json.dumps(v).encode("utf-8")
-            )
-            print(f"[Orchestrator] Connected to Kafka at {KAFKA_BROKER}", flush=True)
-            break
-        except Exception as e:
-            print(f"[Orchestrator] Attempt {attempt + 1} failed: {e}", flush=True)
-            time.sleep(3)
-    else:
-        print("[Orchestrator] Could not connect to Kafka after 10 attempts. Exiting.", flush=True)
-        raise RuntimeError("Kafka unavailable")
-
+    print("[Orchestrator] Initializing producer...")
+    producer = init_kafka_producer()
     yield
-
-    print("[Orchestrator] Shutting down...")
+    print("[Orchestrator] Shutdown complete.")
 
 app = FastAPI(lifespan=lifespan)
 
