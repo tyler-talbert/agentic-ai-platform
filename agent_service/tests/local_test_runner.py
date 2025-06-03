@@ -1,4 +1,4 @@
-from agent_service.app.agent_runner import run_agent
+from agent_service.app import run_agent
 
 # Local testing script for validating agent behavior in isolation.
 if __name__ == "__main__":
