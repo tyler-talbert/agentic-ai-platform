@@ -7,7 +7,7 @@ services:
       context: ./agent_orchestrator
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "4000:8000"
     volumes:
       - ./agent_orchestrator:/app
     depends_on:
@@ -23,12 +23,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4001:4001"
-    volumes:
-      - ./agent_service:/app
     environment:
       KAFKA_BROKER: kafka:9092
       TOPIC_IN: agent-tasks-inbound
       TOPIC_OUT: agent-tasks-completed
+      OLLAMA_BASE_URL: http://ollama:11434
     depends_on:
       - kafka
     networks:
@@ -65,6 +64,19 @@ services:
       KAFKA_WAIT_FOR_ZOOKEEPER: "yes"
     networks:
       - agentic-net
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    networks:
+      - agentic-net
+
+volumes:
+  ollama-models:
+
 
 networks:
   agentic-net:
