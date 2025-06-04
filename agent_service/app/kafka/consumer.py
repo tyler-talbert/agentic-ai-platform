@@ -37,8 +37,11 @@ def blocking_consume_loop():
 
     for message in consumer:
         print(f"[Kafka Consumer] Received message: {message.value}")
-        result = run_agent(message.value)
-        produce_result(result)
+        task_id = message.value.get("id")
+        task_input = message.value.get("input")
+
+        result = run_agent({"input": task_input})
+        produce_result({"id": task_id, "result": result})
 
 
 async def consume_kafka_messages():
