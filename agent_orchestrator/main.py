@@ -1,6 +1,5 @@
-# main.py
 from fastapi import FastAPI
-from pydantic import BaseModel
+from app.orchestrator.agent_router import router as agent_router
 from contextlib import asynccontextmanager
 import httpx
 from app.kafka.producer import init_kafka_producer
@@ -19,9 +18,7 @@ async def lifespan(app: FastAPI):
     print("[Orchestrator] Shutdown complete.")
 
 app = FastAPI(lifespan=lifespan)
-
-class TaskRequest(BaseModel):
-    input: str
+app.include_router(agent_router)
 
 @app.get("/health")
 def health_check():
@@ -33,9 +30,3 @@ async def run_agent():
         response = await client.get("http://agent_service:4001/health")
         return {"agent_response": response.json()}
 
-@app.post("/tasks")
-async def submit_task(task: TaskRequest):
-    if not producer:
-        return {"error": "KafkaProducer is not initialized"}
-    producer.send(TOPIC_IN, task.dict())
-    return {"message": "Task submitted to Kafka"}
