@@ -2,11 +2,14 @@ from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage
 import os
 from dotenv import load_dotenv
+from app.logger import setup_logger
 
+log = setup_logger()
 load_dotenv()
 
 def run_agent(task_input: dict) -> str:
-    print(f"[Agent Runner] Received task input: {task_input}", flush=True)
+    log.info(f"[Agent Runner] Received task input: {task_input}")
+
     prompt_text = task_input.get("input") or str(task_input)
 
     model = ChatOllama(
@@ -16,5 +19,5 @@ def run_agent(task_input: dict) -> str:
     )
 
     response = model.invoke([HumanMessage(content=prompt_text)])
-    print(f"[Agent Runner] Final response: {response}", flush=True)
+    log.info(f"[Agent Runner] Final response: {response}")
     return response.content
