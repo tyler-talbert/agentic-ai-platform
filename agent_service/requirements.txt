@@ -8,3 +8,4 @@ ollama
 python-dotenv
 langchain-openai
 openai
+structlog

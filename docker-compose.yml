@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   orchestrator:
     container_name: orchestrator
@@ -13,6 +11,7 @@ services:
     depends_on:
       - agent_service
       - kafka
+      - ollama
     networks:
       - agentic-net
 
@@ -30,6 +29,7 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
     depends_on:
       - kafka
+      - ollama
     networks:
       - agentic-net
 
@@ -60,6 +60,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_WAIT_FOR_ZOOKEEPER: "yes"
     networks:
@@ -67,16 +68,17 @@ services:
 
   ollama:
     image: ollama/ollama
+    container_name: ollama
     ports:
       - "11434:11434"
     volumes:
       - ollama-models:/root/.ollama
+    restart: unless-stopped
     networks:
       - agentic-net
 
 volumes:
   ollama-models:
-
 
 networks:
   agentic-net:
