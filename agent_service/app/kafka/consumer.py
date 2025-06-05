@@ -40,7 +40,7 @@ def blocking_consume_loop():
         task_id = message.value.get("id")
         task_input = message.value.get("input")
 
-        result = run_agent({"input": task_input})
+        result = run_agent(task_input)
         produce_result({"id": task_id, "result": result})
 
 
