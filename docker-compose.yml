@@ -73,7 +73,18 @@ services:
       - "11434:11434"
     volumes:
       - ollama-models:/root/.ollama
+    depends_on:
+      - ollama-model-init
     restart: unless-stopped
+    networks:
+      - agentic-net
+
+  ollama-model-init:
+    image: ollama/ollama
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: [ "ollama serve & sleep 2 && ollama pull llama3:latest" ]
+    volumes:
+      - ollama-models:/root/.ollama
     networks:
       - agentic-net
 
