@@ -3,3 +3,4 @@ httpx
 uvicorn[standard]
 confluent-kafka
 kafka-python
+structlog
