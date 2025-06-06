@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from app.orchestrator.agent_router import router as agent_router
+from app.kafka.consumer import consume_kafka_results
 from contextlib import asynccontextmanager
 import httpx
 from app.kafka.producer import init_kafka_producer
 import os
+import asyncio
 
 TOPIC_IN = os.getenv("TOPIC_IN", "agent-tasks-inbound")
 
@@ -14,6 +16,9 @@ async def lifespan(app: FastAPI):
     global producer
     print("[Orchestrator] Initializing producer...")
     producer = init_kafka_producer()
+
+    asyncio.create_task(consume_kafka_results())
+
     yield
     print("[Orchestrator] Shutdown complete.")
 
@@ -29,4 +34,3 @@ async def run_agent():
     async with httpx.AsyncClient() as client:
         response = await client.get("http://agent_service:4001/health")
         return {"agent_response": response.json()}
-
