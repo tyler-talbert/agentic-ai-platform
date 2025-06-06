@@ -1,8 +1,9 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import uuid
 import time
+
 
 class TaskStatus(str, Enum):
     PENDING = "PENDING"
@@ -16,6 +17,11 @@ class AgentTask(BaseModel):
     input: Dict[str, Any]
     status: TaskStatus
     timestamp: float
+    output: Optional[str] = None
+
+    def mark_completed(self, output: str):
+        self.status = TaskStatus.COMPLETED
+        self.output = output
 
     @classmethod
     def create(cls, type: str, input: Dict[str, Any]):
