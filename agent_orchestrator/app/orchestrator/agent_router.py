@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from ..orchestrator.orchestrator_engine import OrchestrationEngine, task_store
-from ..orchestrator.task_model import AgentTask
+from app.orchestrator.orchestrator_engine import OrchestrationEngine
+from app.orchestrator.task_store import TASK_STORE
 
 router = APIRouter(prefix="/v1")
 
@@ -14,7 +14,7 @@ async def create_task(task_input: dict):
 
 @router.get("/tasks/{task_id}")
 async def get_task(task_id: str):
-    task = task_store.get(task_id)
+    task = TASK_STORE.get(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
