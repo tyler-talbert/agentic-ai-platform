@@ -1,3 +1,7 @@
+[![Maintenance](https://img.shields.io/badge/maintained-yes-brightgreen.svg)](https://github.com/tyler-talbert/agentic-ai-platform)
+
+> 🛠️ This project is under active development and ongoing maintenance.
+
 # agentic-ai-platform
 Real-Time Agentic AI Platform built with Python, LangChain, gRPC, Kafka, and vector databases. Enables orchestrated LLM workflows with external knowledge injection (RAG), streaming tasks, and modular service integration.
 
