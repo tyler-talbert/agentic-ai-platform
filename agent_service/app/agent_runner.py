@@ -1,3 +1,4 @@
+import time
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage
 import os
@@ -7,8 +8,9 @@ from app.logger import setup_logger
 log = setup_logger()
 load_dotenv()
 
-def run_agent(task_input: dict) -> str:
-    log.info(f"[Agent Runner] Received task input: {task_input}")
+
+def run_agent(task_id: str, task_input: dict) -> dict:
+    log.info(f"[Agent Runner] Running agent for task_id={task_id}, input={task_input}")
 
     prompt_text = task_input.get("input") or str(task_input)
 
@@ -19,5 +21,13 @@ def run_agent(task_input: dict) -> str:
     )
 
     response = model.invoke([HumanMessage(content=prompt_text)])
-    log.info(f"[Agent Runner] Final response: {response}")
-    return response.content
+
+    log.info(f"[Agent Runner] Response: {response.content}")
+
+    return {
+        "task_id": task_id,
+        "status": "COMPLETED",
+        "output": response.content,
+        "timestamp": time.time()
+    }
+
