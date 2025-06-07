@@ -12,6 +12,11 @@ services:
       - agent_service
       - kafka
       - ollama
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1.5G
     networks:
       - agentic-net
 
@@ -30,6 +35,11 @@ services:
     depends_on:
       - kafka
       - ollama
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1.5G
     networks:
       - agentic-net
 
@@ -39,6 +49,11 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     healthcheck:
       test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
       interval: 5s
@@ -63,6 +78,11 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_WAIT_FOR_ZOOKEEPER: "yes"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
     networks:
       - agentic-net
 
@@ -75,6 +95,11 @@ services:
       - ollama-models:/root/.ollama
     depends_on:
       - ollama-model-init
+    deploy:
+      resources:
+        limits:
+          cpus: '10.0'
+          memory: 10G
     restart: unless-stopped
     networks:
       - agentic-net
