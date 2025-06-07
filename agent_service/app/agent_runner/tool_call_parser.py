@@ -10,7 +10,6 @@ class ToolCallParser:
         """Parse tool call from LLM response"""
         log.info(f"[Tool Call Parser] Parsing response: {response_text[:500]}...")
 
-        # Attempt to extract tool call from JSON format in response
         tool_call = self.extract_from_code_blocks(response_text)
         if tool_call:
             return tool_call
