@@ -15,6 +15,16 @@ This project is a real-time, production-style Agentic AI infrastructure built to
 
 ---
 
+## 🧠 Preloading Ollama Models (Dev Step)
+
+On first run, you may need to preload your desired model (e.g., llama3):
+
+```bash
+docker exec -it ollama ollama pull llama3
+```
+
+---
+
 ## ⚙️ Architecture
 
 ### Components:
@@ -80,6 +90,11 @@ This project is a real-time, production-style Agentic AI infrastructure built to
 - Deploy on Kubernetes with horizontal scaling
 - Add observability via Prometheus + Grafana
 - Simulate traffic via Locust or k6 for load testing
+
+---
+
+## 📄 For detailed engineering context and design decisions, see 
+[`docs/engineering-notes.md`](docs/engineering-notes.md)
 
 ---
 
