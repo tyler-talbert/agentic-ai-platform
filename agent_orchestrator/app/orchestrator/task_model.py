@@ -17,9 +17,9 @@ class AgentTask(BaseModel):
     input: Dict[str, Any]
     status: TaskStatus
     timestamp: float
-    output: Optional[str] = None
+    output: Optional[Any] = None
 
-    def mark_completed(self, output: str):
+    def mark_completed(self, output: Any):
         self.status = TaskStatus.COMPLETED
         self.output = output
 
@@ -30,5 +30,5 @@ class AgentTask(BaseModel):
             type=type,
             input=input,
             status=TaskStatus.PENDING,
-            timestamp=time.time()
+            timestamp=time.time(),
         )
