@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+
+from agent_orchestrator.app.vector_db import init_pinecone
 from app.orchestrator.agent_router import router as agent_router
 from app.kafka.consumer import consume_kafka_results
 from contextlib import asynccontextmanager
@@ -13,6 +15,7 @@ producer = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_pinecone()
     global producer
     print("[Orchestrator] Initializing producer...")
     producer = init_kafka_producer()
