@@ -92,31 +92,27 @@ services:
       - agentic-net
 
   ollama:
-    image: ollama/ollama
+    image: ollama/ollama:0.1.32
     container_name: ollama
-    ports:
-      - "11434:11434"
+    depends_on:
+      ollama-model-init: { condition: service_completed_successfully }
     volumes:
       - ollama-models:/root/.ollama
-    depends_on:
-      - ollama-model-init
-    deploy:
-      resources:
-        limits:
-          cpus: '10.0'
-          memory: 10G
+    ports: [ "11434:11434" ]
     restart: unless-stopped
-    networks:
-      - agentic-net
+    networks: [ agentic-net ]
 
   ollama-model-init:
-    image: ollama/ollama
-    entrypoint: [ "/bin/sh", "-c" ]
-    command: [ "ollama serve & sleep 2 && ollama pull llama3:latest" ]
+    image: ollama/ollama:0.1.32
+    entrypoint: [ "/bin/sh","-c" ]
+    command: |
+      ollama serve &            
+      sleep 2 &&                  
+      ollama pull llama3:latest && \
+      ollama pull nomic-embed-text:latest
     volumes:
       - ollama-models:/root/.ollama
-    networks:
-      - agentic-net
+    networks: [ agentic-net ]
 
 volumes:
   ollama-models:

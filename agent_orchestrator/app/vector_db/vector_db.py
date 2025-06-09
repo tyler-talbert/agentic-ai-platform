@@ -2,7 +2,7 @@ import os
 from pinecone import Pinecone, ServerlessSpec
 
 INDEX_NAME = "agent-knowledge-base"
-INDEX_DIMENSION = 1536
+INDEX_DIMENSION = 768
 
 def get_pinecone_client():
     return Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
