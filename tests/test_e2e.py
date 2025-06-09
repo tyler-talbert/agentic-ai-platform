@@ -43,21 +43,28 @@ def test_cross_service_call():
     log("✅ Cross-service call successful.")
 
 
-def test_task_submission():
-    log("Submitting test task to /tasks (Kafka roundtrip test)...")
+def test_task_submission_kafka_roundtrip():
+    print("Testing Kafka roundtrip via /v1/tasks endpoint...")
+    payload = {"input": "hello test"}
+    res = httpx.post(f"{ORCHESTRATOR_URL}/v1/tasks", json=payload)
+    assert res.status_code == 200, f"Task submission failed: {res.text}"
+    data = res.json()
+    assert "task_id" in data
+    assert data["status"] == "PENDING"
+    print("[PASS] Task submission acknowledged")
 
-    payload = {"input": "test input for agent"}
-    res = httpx.post(f"{ORCHESTRATOR_URL}/tasks", json=payload)
-    assert_status(res)
-
-    assert res.json().get("message") == "Task submitted to Kafka"
-    log("✅ Task accepted by orchestrator.")
-
-    log("Waiting 5 seconds to allow async Kafka consumption...")
-    time.sleep(5)
-
-    # TODO: Add result verification once agent outputs to a persistent store (Redis/vector DB/etc.)
-    log("Manual verification required: check agent_service logs for 'Received message' and 'Result produced'.")
+    print("Polling for task completion...")
+    task_id = data["task_id"]
+    for _ in range(10):
+        time.sleep(1)
+        status_res = httpx.get(f"{ORCHESTRATOR_URL}/v1/tasks/{task_id}")
+        assert status_res.status_code == 200, f"Status check failed: {status_res.text}"
+        status_json = status_res.json()
+        if status_json["status"] == "completed":
+            print(f"[PASS] Task {task_id} completed with result: {status_json['result']}")
+            break
+    else:
+        raise AssertionError(f"[FAIL] Task {task_id} did not complete in time")
 
 
 def run_all_tests():

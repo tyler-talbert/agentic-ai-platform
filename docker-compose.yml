@@ -11,7 +11,7 @@ services:
       - ./agent_orchestrator:/app
     environment:
       - PINECONE_API_KEY=${PINECONE_API_KEY}
-      - PINECONE_ENV=us-west1-gcp
+      - PINECONE_ENV=gcp-starter
     depends_on:
       - agent_service
       - kafka

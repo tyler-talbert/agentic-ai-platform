@@ -1,24 +1,29 @@
-import pinecone
 import os
+from pinecone import Pinecone, ServerlessSpec
+
+INDEX_NAME = "agent-knowledge-base"
+INDEX_DIMENSION = 1536
+
+def get_pinecone_client():
+    return Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 def init_pinecone():
-    api_key = os.getenv("PINECONE_API_KEY")
-    environment = os.getenv("PINECONE_ENV", "us-west1-gcp")
-    pinecone.init(api_key=api_key, environment=environment)
-    print("Pinecone client initialized.")
+    print("[VectorDB] Pinecone client initialized.")
 
-def create_index(index_name, dimension=1536):
-    if index_name not in pinecone.list_indexes():
-        pinecone.create_index(index_name, dimension=dimension)
-        print(f"Index '{index_name}' created with dimension {dimension}.")
-    else:
-        print(f"Index '{index_name}' already exists.")
+def create_index(index_name: str, dimension: int):
+    pc = get_pinecone_client()
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=dimension,
+            metric="cosine",
+            spec=ServerlessSpec(
+                cloud="aws",
+                region="us-east-1"
+            )
+        )
+        print(f"[VectorDB] Created Pinecone index '{index_name}'.")
 
-def get_index(index_name):
-    try:
-        index = pinecone.Index(index_name)
-        print(f"Successfully retrieved index '{index_name}'.")
-        return index
-    except Exception as e:
-        print(f"Failed to retrieve index '{index_name}': {e}")
-        return None
+def get_index(index_name: str):
+    pc = get_pinecone_client()
+    return pc.Index(index_name)

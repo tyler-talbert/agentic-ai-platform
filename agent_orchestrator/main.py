@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-
-from agent_orchestrator.app.vector_db import init_pinecone, create_index, get_index
+import sys
+from app.vector_db import init_pinecone, create_index, get_index
 from app.orchestrator.agent_router import router as agent_router
 from app.kafka.consumer import consume_kafka_results
 from contextlib import asynccontextmanager
@@ -8,6 +8,8 @@ import httpx
 from app.kafka.producer import init_kafka_producer
 import os
 import asyncio
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 TOPIC_IN = os.getenv("TOPIC_IN", "agent-tasks-inbound")
 
