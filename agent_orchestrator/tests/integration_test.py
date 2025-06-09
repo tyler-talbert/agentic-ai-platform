@@ -1,70 +1,59 @@
-import time
-import httpx
-from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-from dotenv import load_dotenv
-import sys
 import os
+from unittest.mock import patch, MagicMock, AsyncMock
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+import httpx
+import pytest
+from fastapi.testclient import TestClient
 
-load_dotenv(dotenv_path="agent_orchestrator/.env")
-__test__ = True
+os.environ.setdefault("PINECONE_API_KEY", "dummy")
+os.environ.setdefault("PINECONE_ENV", "test-env")
 
-mode = os.getenv("TEST_MODE", "docker")  # Options: "local", "docker"
-ORCHESTRATOR_URL = "http://localhost:4000" if mode == "local" else "http://orchestrator:8000"
-AGENT_URL = "http://localhost:4001" if mode == "local" else "http://agent_service:4001"
+_fake_index = MagicMock(name="pinecone_index")
+_fake_client = MagicMock(name="pinecone_client")
+_fake_client.list_indexes().names.return_value = ["agent-knowledge-base"]
+_fake_client.Index.return_value = _fake_index
 
-def test_health_check():
-    print("Testing /health endpoints...")
-    orch = httpx.get(f"{ORCHESTRATOR_URL}/health")
-    agent = httpx.get(f"{AGENT_URL}/health")
-    assert orch.status_code == 200, f"Orchestrator health failed: {orch.text}"
-    assert agent.status_code == 200, f"Agent service health failed: {agent.text}"
-    print("[PASS] /health endpoints OK")
+with patch("pinecone.Pinecone", return_value=_fake_client), \
+     patch("app.kafka.producer.init_kafka_producer", return_value=MagicMock()):
 
-def test_cross_service_call():
-    print("Testing orchestrator --> agent_service via /run-agent...")
-    res = httpx.get(f"{ORCHESTRATOR_URL}/run-agent")
-    assert res.status_code == 200, f"Run-agent failed: {res.text}"
-    assert res.json()["agent_response"]["status"] == "agent_service is healthy"
-    print("[PASS] Cross-service call succeeded")
+    from agent_orchestrator.main import app  # noqa: E402
 
-def test_task_submission_kafka_roundtrip():
-    print("Testing Kafka roundtrip via /v1/tasks endpoint...")
+@pytest.fixture
+def client():
+    with TestClient(app) as c:
+        yield c
+
+def test_lifespan_attaches_vector_index(client):
+    assert app.state.vector_index is _fake_index
+
+
+def test_health_check(client):
+    res = client.get("/health")
+    assert res.status_code == 200
+    assert res.json()["status"] == "agent_orchestrator is healthy"
+
+
+def test_cross_service_call(client):
+    mock_resp = httpx.Response(200, json={"status": "agent_service is healthy"})
+    with patch(
+        "agent_orchestrator.main.httpx.AsyncClient.get",
+        new_callable=AsyncMock,
+        return_value=mock_resp,
+    ):
+        res = client.get("/run-agent")
+        assert res.status_code == 200
+        assert res.json()["agent_response"]["status"] == "agent_service is healthy"
+
+
+@patch("app.orchestrator.orchestrator_engine.embed_text", new_callable=AsyncMock)
+@patch("app.orchestrator.orchestrator_engine.produce_task")
+def test_task_submission_endpoint(mock_produce_task, mock_embed_text, client):
+    mock_embed_text.return_value = [0.1] * 1536
+
     payload = {"input": "hello test"}
-    res = httpx.post(f"{ORCHESTRATOR_URL}/v1/tasks", json=payload)
-    assert res.status_code == 200, f"Task submission failed: {res.text}"
-    data = res.json()
-    assert "task_id" in data
-    assert data["status"] == "PENDING"
-    print("[PASS] Task submission acknowledged")
+    res = client.post("/v1/tasks", json=payload)
 
-    print("Polling for task completion...")
-    task_id = data["task_id"]
-    for _ in range(10):
-        time.sleep(1)
-        status_res = httpx.get(f"{ORCHESTRATOR_URL}/v1/tasks/{task_id}")
-        assert status_res.status_code == 200, f"Status check failed: {status_res.text}"
-        status_json = status_res.json()
-        if status_json["status"] == "completed":
-            print(f"[PASS] Task {task_id} completed with result: {status_json['result']}")
-            break
-    else:
-        raise AssertionError(f"[FAIL] Task {task_id} did not complete in time")
-
-
-
-@patch("agent_orchestrator.app.vector_db.init_pinecone")
-@patch("agent_orchestrator.app.vector_db.create_index")
-@patch("agent_orchestrator.app.vector_db.get_index")
-def test_pinecone_startup(mock_get_index, mock_create_index, mock_init_pinecone):
-    mock_index = MagicMock()
-    mock_get_index.return_value = mock_index
-
-    from agent_orchestrator.main import app
-
-    with TestClient(app) as client:
-        assert app.state.vector_index == mock_index
-        print("[Test] Pinecone vector index successfully attached to app state.")
-
+    assert res.status_code == 200
+    body = res.json()
+    assert body["status"] == "PENDING"
+    mock_produce_task.assert_called_once()

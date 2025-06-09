@@ -1,7 +1,7 @@
 from app.kafka.producer import produce_task
 from app.orchestrator.task_model import AgentTask
 from app.orchestrator.task_store import TASK_STORE
-from app.vector_db.embedding_service import embed_text
+from app.vector_db.embedder import embed_text
 import uuid
 
 class OrchestrationEngine:
