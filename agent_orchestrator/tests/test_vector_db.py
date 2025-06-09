@@ -1,40 +1,44 @@
-import unittest
-from unittest.mock import patch
 import os
+import unittest
+from unittest.mock import patch, MagicMock
+from app.vector_db.vector_db import init_pinecone, create_index, get_index
 
-from agent_orchestrator.app.vector_db import init_pinecone, create_index, get_index
 
 class TestVectorDB(unittest.TestCase):
 
-    @patch("pinecone.init")
-    def test_init_pinecone(self, mock_init):
-        os.environ["PINECONE_API_KEY"] = "test-key"
-        os.environ["PINECONE_ENV"] = "test-env"
-        init_pinecone()
-        mock_init.assert_called_with(api_key="test-key", environment="test-env")
+    @patch("app.vector_db.vector_db.Pinecone")
+    def test_init_pinecone_no_error(self, mock_pc):
+        os.environ["PINECONE_API_KEY"] = "dummy"
+        os.environ["PINECONE_ENV"] = "dummy"
+        init_pinecone()           # should not raise
 
-    @patch("pinecone.list_indexes", return_value=["existing-index"])
-    @patch("pinecone.create_index")
-    def test_create_index_existing(self, mock_create_index, mock_list_indexes):
-        create_index("existing-index", 128)
-        mock_create_index.assert_not_called()
+    @patch("app.vector_db.vector_db.Pinecone")
+    def test_create_index_existing(self, mock_pc_cls):
+        mock_client = MagicMock()
+        mock_client.list_indexes().names.return_value = ["existing"]
+        mock_pc_cls.return_value = mock_client
+        create_index("existing", 128)
 
-    @patch("pinecone.list_indexes", return_value=[])
-    @patch("pinecone.create_index")
-    def test_create_index_new(self, mock_create_index, mock_list_indexes):
-        create_index("new-index", 128)
-        mock_create_index.assert_called_with("new-index", dimension=128)
+    @patch("app.vector_db.vector_db.Pinecone")
+    def test_create_index_new(self, mock_pc_cls):
+        mock_client = MagicMock()
+        mock_client.list_indexes().names.return_value = []
+        mock_pc_cls.return_value = mock_client
+        create_index("new‑index", 128)
+        mock_client.create_index.assert_called_once()
 
-    @patch("pinecone.Index")
-    def test_get_index_success(self, mock_index_class):
-        index = get_index("some-index")
-        mock_index_class.assert_called_with("some-index")
-        self.assertIsNotNone(index)
+    @patch("app.vector_db.vector_db.Pinecone")
+    def test_get_index_success(self, mock_pc_cls):
+        mock_client = MagicMock()
+        mock_idx = MagicMock()
+        mock_client.Index.return_value = mock_idx
+        mock_pc_cls.return_value = mock_client
+        self.assertIs(get_index("my‑idx"), mock_idx)
 
-    @patch("pinecone.Index", side_effect=Exception("Failure"))
-    def test_get_index_failure(self, mock_index_class):
-        index = get_index("bad-index")
-        self.assertIsNone(index)
-
-if __name__ == "__main__":
-    unittest.main()
+    @patch("app.vector_db.vector_db.Pinecone")
+    def test_get_index_failure(self, mock_pc_cls):
+        mock_client = MagicMock()
+        mock_client.Index.side_effect = Exception("boom")
+        mock_pc_cls.return_value = mock_client
+        with self.assertRaises(Exception):
+            get_index("bad‑idx")

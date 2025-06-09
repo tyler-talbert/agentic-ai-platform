@@ -18,8 +18,8 @@ def get_kafka_producer(retries=5, delay=2):
             time.sleep(delay)
     raise Exception("Kafka broker unavailable after retries")
 
-def produce_result(result: dict):
-    print("Producing result to Kafka:", result)
+def produce_result(payload: dict):
     producer = get_kafka_producer()
-    producer.send(TOPIC_OUT, value=result)
+    producer.send(TOPIC_OUT, value=payload)
     producer.flush()
+    print(f"[Kafka Producer] Sent completed task {payload.get('task_id')}")
