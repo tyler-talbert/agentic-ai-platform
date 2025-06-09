@@ -1,13 +1,17 @@
 services:
-  orchestrator:
+  agent_orchestrator:
     container_name: orchestrator
     build:
       context: ./agent_orchestrator
       dockerfile: Dockerfile
+    image: agentic-ai-platform-orchestrator
     ports:
       - "4000:8000"
     volumes:
       - ./agent_orchestrator:/app
+    environment:
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_ENV=gcp-starter
     depends_on:
       - agent_service
       - kafka
@@ -25,6 +29,7 @@ services:
     build:
       context: ./agent_service
       dockerfile: Dockerfile
+    image: agentic-ai-platform-agent
     ports:
       - "4001:4001"
     environment:

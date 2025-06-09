@@ -4,3 +4,4 @@ uvicorn[standard]
 confluent-kafka
 kafka-python
 structlog
+pinecone-client==3.2.2
