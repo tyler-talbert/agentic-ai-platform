@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 import os
 
-from agent_orchestrator.app.vector_db import init_pinecone, create_index, get_index
+from agent_orchestrator.app.vector_db.vector_db import init_pinecone, create_index, get_index
 
 class TestVectorDB(unittest.TestCase):
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import sys
-from app.vector_db import init_pinecone, create_index, get_index
+from agent_orchestrator.app.vector_db.vector_db import init_pinecone, create_index, get_index
 from app.orchestrator.agent_router import router as agent_router
 from app.kafka.consumer import consume_kafka_results
 from contextlib import asynccontextmanager
