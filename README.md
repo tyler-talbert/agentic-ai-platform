@@ -19,7 +19,7 @@ This project is a real-time, production-style Agentic AI infrastructure built to
 
 On first run, you may need to preload your desired model (e.g., llama3):
 
-```bash
+```
 docker exec -it ollama ollama pull llama3
 ```
 
@@ -29,17 +29,17 @@ docker exec -it ollama ollama pull llama3
 
 ### Components:
 
-- **Gateway API** (FastAPI / Spring Boot): Handles incoming user prompts and HTTP interaction
-- **Agent Orchestrator** (LangChain + Python): Coordinates tools, executes RAG chains, routes to services
-- **Knowledge Base** (Vector DB - e.g., FAISS or Qdrant): Embeds and retrieves external data/documents
-- **Kafka Broker**: Handles pub/sub events between orchestrator and downstream tools
-- **Service Agents**:
-  - `CodeAnalyzerService` – Parses and classifies source/target projects
-  - `MappingPlannerService` – Plans integration based on metadata
-  - `TransformerService` – Applies actual transformations or outputs
-- **gRPC Interface**: Enables fast internal calls between Python orchestrator and Java-based services
-- **CI/CD**: GitHub Actions for lint/test/build of Python and Java components
-- **Local Dev Environment**: Docker Compose
+- **Gateway API** (FastAPI / Spring Boot): Handles incoming user prompts and HTTP interaction  
+- **Agent Orchestrator** (LangChain + Python): Coordinates tools, executes RAG chains, routes to services  
+- **Knowledge Base** (Vector DB - e.g., FAISS or Qdrant): Embeds and retrieves external data/documents  
+- **Kafka Broker**: Handles pub/sub events between orchestrator and downstream tools  
+- **Service Agents**:  
+  - `CodeAnalyzerService` – Parses and classifies source/target projects  
+  - `MappingPlannerService` – Plans integration based on metadata  
+  - `TransformerService` – Applies actual transformations or outputs  
+- **gRPC Interface**: Enables fast internal calls between Python orchestrator and Java-based services  
+- **CI/CD**: GitHub Actions for lint/test/build of Python and Java components  
+- **Local Dev Environment**: Docker Compose  
 
 ---
 
@@ -58,42 +58,79 @@ docker exec -it ollama ollama pull llama3
 
 ---
 
+## 📦 Pinecone Integration
+
+The platform supports **Pinecone** as the default vector database for high-performance semantic search. This enables fast document retrieval during RAG (Retrieval-Augmented Generation) operations.
+
+### 🧩 What Pinecone Does
+
+- Stores high-dimensional vector embeddings  
+- Supports similarity search for context injection  
+- Powers the document lookup stage in the LangChain pipeline  
+
+### 🔐 Required Environment Variables
+
+Ensure these are configured in your `.env` file or passed into the Docker Compose environment:
+
+```
+PINECONE_API_KEY=your-pinecone-api-key
+PINECONE_ENV=gcp-starter  # Or your specific Pinecone environment
+```
+
+> **Note:** These are injected into the `agent_orchestrator` container via `docker-compose.yml`.
+
+### 🧪 Startup Behavior
+
+On orchestrator startup, the following occurs:
+
+- Pinecone is initialized using the provided API key  
+- A vector index is created (default: `agent-knowledge-base`)  
+- The index is attached to the app state for use in RAG queries  
+
+To confirm it’s working, check the logs:
+
+```
+[Orchestrator] Initializing Pinecone...
+[Orchestrator] Pinecone index 'agent-knowledge-base' attached to app state.
+```
+
+---
+
 ## 🚀 Example Workflow
 
-[User Prompt] → [Gateway API]
-↓
-[LangChain Agent Orchestrator]
-↓
-[RAG Chain → Vector DB Search]
-↓
-[Kafka Publish → Service Agent Request]
-↓
-[gRPC Call → Java Service Integration]
-↓
+[User Prompt] → [Gateway API]  
+↓  
+[LangChain Agent Orchestrator]  
+↓  
+[RAG Chain → Vector DB Search]  
+↓  
+[Kafka Publish → Service Agent Request]  
+↓  
+[gRPC Call → Java Service Integration]  
+↓  
 [Final Response → Gateway → User]
-
 
 ---
 
 ## 🔍 Use Cases Simulated
 
-- Integrating source + target projects via LLM
-- Auto-generating transformation plans based on external metadata
-- Streaming user intents to modular AI agents for fulfillment
+- Integrating source + target projects via LLM  
+- Auto-generating transformation plans based on external metadata  
+- Streaming user intents to modular AI agents for fulfillment  
 
 ---
 
 ## 📈 Future Goals
 
-- Add fine-tuning or supervised adapters for specific tools
-- Integrate OpenTelemetry for tracing LLM toolchains
-- Deploy on Kubernetes with horizontal scaling
-- Add observability via Prometheus + Grafana
-- Simulate traffic via Locust or k6 for load testing
+- Add fine-tuning or supervised adapters for specific tools  
+- Integrate OpenTelemetry for tracing LLM toolchains  
+- Deploy on Kubernetes with horizontal scaling  
+- Add observability via Prometheus + Grafana  
+- Simulate traffic via Locust or k6 for load testing  
 
 ---
 
-## 📄 For detailed engineering context and design decisions, see 
+## 📄 For detailed engineering context and design decisions, see  
 [`docs/engineering-notes.md`](docs/engineering-notes.md)
 
 ---
@@ -109,4 +146,3 @@ Senior Software Engineer @ Visa
 ## 🏷️ Tags
 
 `#agentic-ai` `#langchain` `#kafka` `#grpc` `#retrieval` `#vector-db` `#faiss` `#orchestration` `#microservices` `#generative-ai`
-
