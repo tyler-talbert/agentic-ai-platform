@@ -9,31 +9,24 @@ async def retrieve_similar_vectors(
     vector_index,
     top_k: int = 5
 ) -> List[Dict]:
-    """Retrieve the top-k vectors most similar to `query`.
+    """
+    Retrieve the top-k *answer* vectors most similar to `query`.
 
-       First embeds the query using Ollama, then issues a Pinecone
-       query with `include_metadata=True`, and finally transforms
-       each match into a simple dict with `id`, `score`, and
-       `metadata`.
-
-       Args:
-           query: The raw text to embed and search for.
-           vector_index: Initialized Pinecone Index client.
-           top_k: How many nearest neighbors to return.
-
-       Returns:
-           A list of dicts, each containing the vector `id`, its
-           similarity `score`, and associated `metadata`.
-       """
+    Steps:
+      1. Embed the query text via Ollama.
+      2. Query Pinecone for vectors with metadata type="answer".
+      3. Return a list of dicts: {id, score, metadata}.
+    """
     log.info("[RAG] Embedding query for retrieval")
     embedding = await embed_text(query)
     log.info(f"[RAG] Received embedding of length {len(embedding)}")
 
     result = vector_index.query(
         namespace="",
+        vector=embedding,
         top_k=top_k,
         include_metadata=True,
-        vector=embedding
+        filter={"type": "answer"},
     )
 
     retrieved: List[Dict] = []
@@ -43,7 +36,7 @@ async def retrieve_similar_vectors(
             "score": match.score,
             "metadata": match.metadata
         })
-        log.info(f"[RAG] Retrieved vector {match.id} (score={match.score})")
+        log.info(f"[RAG] Retrieved answer vector {match.id} (score={match.score})")
 
     log.info("[RAG] Context injection complete")
     return retrieved
