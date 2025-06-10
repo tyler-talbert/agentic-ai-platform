@@ -5,9 +5,13 @@ import asyncio
 from kafka import KafkaConsumer
 from kafka.errors import NoBrokersAvailable
 from app.orchestrator.task_store import TASK_STORE
+from app.vector_db.embedder import embed_text
+from app.vector_db.vector_db import get_index
 
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
 TOPIC_OUT = os.getenv("TOPIC_OUT", "agent-tasks-completed")
+INDEX_NAME = "agent-knowledge-base"
+
 
 def blocking_result_consume_loop(task_store):
     print(f"[Kafka Consumer] Connecting to broker at {KAFKA_BROKER} to listen on '{TOPIC_OUT}'")
@@ -44,6 +48,25 @@ def blocking_result_consume_loop(task_store):
 
         task.mark_completed(output)
         print(f"[Task Store] Updated task {task_id} as COMPLETED.")
+
+        if output:
+            try:
+                # Embed the answer
+                embedding = asyncio.run(embed_text(output))
+
+                vector_index = get_index(INDEX_NAME)
+                vector_index.upsert(vectors=[{
+                    "id": f"{task_id}-a",
+                    "values": embedding,
+                    "metadata": {
+                        "type": "answer",
+                        "task_id": task_id,
+                        "text": output
+                    }
+                }])
+                print(f"[Pinecone] Upserted answer vector for task {task_id}")
+            except Exception as e:
+                print(f"[Pinecone] Failed to upsert answer for task {task_id}: {e}")
 
 
 async def consume_kafka_results():
