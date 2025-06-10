@@ -8,7 +8,6 @@ from app.kafka.consumer import consume_kafka_messages
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[Agent Service] Lifespan started WITH Kafka.", flush=True)
-    # Launch the Kafka consumer as a background task
     loop = asyncio.get_event_loop()
     loop.create_task(consume_kafka_messages())
     yield

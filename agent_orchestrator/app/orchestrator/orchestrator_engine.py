@@ -26,7 +26,7 @@ class OrchestrationEngine:
                     log.info(f"[Embedding] Received vector of length {len(embedding)}")
 
                     vector_index.upsert(vectors=[{
-                        "id": str(uuid.uuid4()),
+                        "id": task.id,
                         "values": embedding,
                         "metadata": {
                             "task_id": task.id,
