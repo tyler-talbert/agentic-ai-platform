@@ -1,6 +1,5 @@
 import unittest
-from app.tools.scholar_tool import ScholarTool
-
+from agent_service.app.tools.scholar_tool import ScholarTool
 
 class TestScholarTool(unittest.TestCase):
     def setUp(self):
@@ -13,7 +12,6 @@ class TestScholarTool(unittest.TestCase):
         self.assertEqual(result["status"], "success")
         self.assertEqual(len(result["results"]), 5)
         self.assertTrue("Scholar paper" in result["results"][0])
-
 
 if __name__ == "__main__":
     unittest.main()
