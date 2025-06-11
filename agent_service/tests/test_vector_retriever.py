@@ -24,6 +24,7 @@ class DummyIndex:
 
 class TestVectorRetriever(unittest.TestCase):
     def setUp(self):
+        # Patch embed_text in the correct module path
         patcher = unittest.mock.patch(
             'agent_service.app.vector_db.vector_retriever.embed_text',
             new=self.fake_embed_text
@@ -51,3 +52,6 @@ class TestVectorRetriever(unittest.TestCase):
         self.assertEqual(contexts[1]['id'], 'q2-a')
         self.assertAlmostEqual(contexts[1]['score'], 0.85)
         self.assertEqual(contexts[1]['metadata']['text'], 'Answer2')
+
+if __name__ == '__main__':
+    unittest.main()

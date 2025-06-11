@@ -1,4 +1,3 @@
-import os
 
 SYSTEM_PROMPT = """
 You are an AI assistant that can use tools to help answer user questions.
