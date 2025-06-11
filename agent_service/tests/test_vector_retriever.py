@@ -19,7 +19,8 @@ class DummyIndex:
     def __init__(self, result: DummyResult):
         self._result = result
 
-    def query(self, namespace, vector, top_k, include_metadata, filter):
+    def query(self, namespace, vector, top_k, include_metadata, filter, score_threshold=None):
+        self.received_threshold = score_threshold
         return self._result
 
 class TestVectorRetriever(unittest.TestCase):
@@ -52,6 +53,19 @@ class TestVectorRetriever(unittest.TestCase):
         self.assertEqual(contexts[1]['id'], 'q2-a')
         self.assertAlmostEqual(contexts[1]['score'], 0.85)
         self.assertEqual(contexts[1]['metadata']['text'], 'Answer2')
+
+    def test_retrieve_respects_threshold(self):
+        contexts = asyncio.get_event_loop().run_until_complete(
+            retrieve_similar_vectors(
+                "dummy query",
+                self.index,
+                top_k=2,
+                relevance_threshold=0.9,
+            )
+        )
+        self.assertEqual(len(contexts), 1)
+        self.assertEqual(contexts[0]['id'], 'q1-a')
+        self.assertAlmostEqual(contexts[0]['score'], 0.95)
 
 if __name__ == '__main__':
     unittest.main()
