@@ -49,6 +49,7 @@ services:
       OLLAMA_EMBEDDING_URL: "http://ollama:11434/api/embeddings"
       OLLAMA_EMBEDDING_MODEL: "nomic-embed-text"
       OLLAMA_EMBEDDING_DIM: "768"
+      RELEVANCE_THRESHOLD: ".75"
     depends_on:
       - kafka
       - ollama
