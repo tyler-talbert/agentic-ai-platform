@@ -25,7 +25,7 @@ async def embed_text(text: str) -> List[float]:
         "OLLAMA_EMBEDDING_MODEL",
         "nomic-embed-text"
     )
-    payload = {"model": model, "prompt": text}
+    payload = {"model": model, "text": text}
 
     async with httpx.AsyncClient(timeout=60) as client:
         for attempt in range(1, _MAX_RETRIES + 1):
