@@ -1,7 +1,9 @@
 import time
 import logging
 import asyncio
-from app.config import SYSTEM_PROMPT, get_vector_index
+
+from app.config import SYSTEM_PROMPT
+from app.vector_db.vector_db import get_index
 from app.vector_db.vector_retriever import retrieve_similar_vectors
 from app.llm_interaction import LLMInteraction
 from app.agent_runner.tool_call_parser import ToolCallParser
@@ -15,7 +17,7 @@ def run_agent(task_id: str, task_input: dict) -> dict:
     user_input = task_input.get("input") or str(task_input)
 
     # RAG: retrieve top-5 *answer* contexts from Pinecone
-    vector_index = get_vector_index()
+    vector_index = get_index()
     contexts = asyncio.run(retrieve_similar_vectors(user_input, vector_index, top_k=5))
     log.info(f"[Agent Runner] Retrieved {len(contexts)} answer contexts for RAG")
 
