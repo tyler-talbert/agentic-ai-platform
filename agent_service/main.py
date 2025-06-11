@@ -3,13 +3,14 @@ from contextlib import asynccontextmanager
 import asyncio
 
 from app.kafka.consumer import consume_kafka_messages
-from app.config import init_pinecone, get_vector_index, INDEX_NAME
+from app.vector_db.vector_db import init_pinecone, create_index, get_index, INDEX_NAME
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[Agent Service] Initializing Pinecone...", flush=True)
     init_pinecone()
-    vector_index = get_vector_index()
+    create_index()
+    vector_index = get_index()
     app.state.vector_index = vector_index
     print(f"[Agent Service] Pinecone index '{INDEX_NAME}' ready.", flush=True)
 

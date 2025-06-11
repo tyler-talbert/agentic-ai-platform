@@ -1,5 +1,3 @@
-import os
-import pinecone
 
 SYSTEM_PROMPT = """
 You are an AI assistant that can use tools to help answer user questions.
@@ -37,23 +35,3 @@ Assistant: I'll search for the latest AI research for you.
 }
 
 """
-
-
-INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "agent-knowledge-base")
-INDEX_DIM = int(os.getenv("PINECONE_INDEX_DIM", 768))
-
-def init_pinecone() -> None:
-    """
-    Initialize Pinecone with API key & environment, create index if needed.
-    """
-    api_key = os.getenv("PINECONE_API_KEY")
-    env    = os.getenv("PINECONE_ENV")
-    pinecone.init(api_key=api_key, environment=env)
-    if INDEX_NAME not in pinecone.list_indexes():
-        pinecone.create_index(name=INDEX_NAME, dimension=INDEX_DIM)
-
-def get_vector_index() -> pinecone.Index:
-    """
-    Return the Pinecone Index object (assumes init_pinecone() has been called).
-    """
-    return pinecone.Index(INDEX_NAME)
