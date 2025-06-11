@@ -33,10 +33,14 @@ services:
     ports:
       - "4001:4001"
     environment:
-      KAFKA_BROKER: kafka:9092
-      TOPIC_IN: agent-tasks-inbound
-      TOPIC_OUT: agent-tasks-completed
-      OLLAMA_BASE_URL: http://ollama:11434
+      KAFKA_BROKER: "kafka:9092"
+      TOPIC_IN: "agent-tasks-inbound"
+      TOPIC_OUT: "agent-tasks-completed"
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      PINECONE_API_KEY: "${PINECONE_API_KEY}"
+      PINECONE_ENV: "gcp-starter"
+      PINECONE_INDEX_NAME: "${PINECONE_INDEX_NAME:-agent-knowledge-base}"
+      PINECONE_INDEX_DIM: "${PINECONE_INDEX_DIM:-768}"
     depends_on:
       - kafka
       - ollama
@@ -47,6 +51,7 @@ services:
           memory: 1.5G
     networks:
       - agentic-net
+
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
