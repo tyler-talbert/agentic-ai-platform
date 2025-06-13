@@ -10,3 +10,4 @@ langchain-openai
 openai
 structlog
 pinecone-client==3.2.2
+torch
