@@ -10,10 +10,10 @@ import random
 import torch
 from torch.utils.data import DataLoader
 
-from agent_service.app.pytorch.model import Autoencoder
-from agent_service.app.pytorch.dataset import AutoencoderDataset
-from agent_service.app.pytorch.trainer import train
-from agent_service.app.vector_db.vector_db import get_index  # existing helper
+from app.pytorch.model import Autoencoder
+from app.pytorch.dataset import AutoencoderDataset
+from app.pytorch.trainer import train
+from app.vector_db.vector_db import get_index  # existing helper
 
 log = logging.getLogger(__name__)
 

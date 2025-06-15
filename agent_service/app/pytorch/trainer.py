@@ -1,7 +1,6 @@
 import logging
 import torch
 from torch.utils.data import DataLoader
-
 from .model import SimpleModel
 
 log = logging.getLogger(__name__)
