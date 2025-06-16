@@ -96,6 +96,17 @@ To confirm it’s working, check the logs:
 
 ---
 
+## 🧙‍♂️ Autoencoder Runtime Flags  
+These environment variables enable the compressed 256-dimension embedding flow:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `AUTOENCODER_WEIGHTS` | `autoencoder.pt` | Path to the trained autoencoder weights loaded at `agent_service` startup. |
+| `PINECONE_COMPRESSED_INDEX` | `agent-knowledge-base-256` | Name of the 256-dim Pinecone index used for compressed vectors. |
+| `RELEVANCE_THRESHOLD` | `0.75` | Minimum similarity score retained after retrieval (overrides default). |
+
+---
+
 ## 🚀 Example Workflow
 
 [User Prompt] → [Gateway API]  
