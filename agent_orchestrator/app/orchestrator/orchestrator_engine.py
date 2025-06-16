@@ -14,23 +14,13 @@ def _to_str(val) -> str:
     )
 
 
-async def _background_embed_question(task_id: str, text: str, app: Request):
-    """Embeds and upserts a *question* vector using the new dual-upsert flow."""
-    try:
-        text_str = _to_str(text)
-        log.info(f"[Embedding] (bg) Embedding QUESTION for task {task_id}")
-        await embed_and_upsert(task_id, text_str, is_answer=False, app=app)
-        log.info(f"[Pinecone] (bg) Upserted QUESTION vector for task {task_id}")
-    except Exception as e:
-        log.exception(f"[Pinecone] (bg) Failed to upsert question {task_id}: {e}")
-
-
 class OrchestrationEngine:
     @staticmethod
     async def handle_task(task_input: dict, request: Request) -> AgentTask:
         """
-        Create an AgentTask, enqueue to Kafka, and embed the question text.
-        `request` gives us app.state for the embed_upsert helper.
+        Create an AgentTask and push it to Kafka.
+        Question embedding is deferred to agent_service; orchestrator no
+        longer imports embed_and_upsert.
         """
         task = AgentTask.create(type="GENERIC", input=task_input)
         TASK_STORE[task.id] = task
@@ -41,8 +31,9 @@ class OrchestrationEngine:
 
         text_to_embed = task_input.get("input", "")
         if text_to_embed:
-            asyncio.create_task(
-                _background_embed_question(task.id, text_to_embed, request)
+            log.info(
+                f"[Orchestrator] Question text for task {task.id}: "
+                f"{_to_str(text_to_embed)[:80]}…"
             )
 
         return task
