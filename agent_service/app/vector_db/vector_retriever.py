@@ -1,37 +1,52 @@
 import logging
-from typing import List, Dict
 import os
+from typing import List, Dict, Union
+
+import torch
+from fastapi import Request
+from pinecone import Index
+
 from app.vector_db.embedder import embed_text
 
 RELEVANCE_THRESHOLD = float(os.getenv("RELEVANCE_THRESHOLD", "0.75"))
-
 log = logging.getLogger(__name__)
+
 
 async def retrieve_similar_vectors(
     query: str,
-    vector_index,
+    ctx: Union[Request, Index, "FastAPI"],
     top_k: int = 5,
     relevance_threshold: float = RELEVANCE_THRESHOLD,
 ) -> List[Dict]:
-    """Return answer vectors similar to ``query`` above a score threshold.
-
-    Parameters
-    ----------
-    query:
-        Text used to search the vector index.
-    vector_index:
-        Pinecone index instance used for retrieval.
-    top_k:
-        Number of matches to request from Pinecone.
-    relevance_threshold:
-        Minimum similarity score to include a match. Defaults to
-        the ``RELEVANCE_THRESHOLD`` environment variable.
     """
+    Return answer vectors similar to ``query``.
 
-    log.info("[RAG] Embedding query for retrieval")
-    embedding = await embed_text(query)
-    log.info(f"[RAG] Received embedding of length {len(embedding)}")
+    `ctx` can be:
+      • FastAPI Request **or** FastAPI app → use encoder & indices on ``ctx.state``
+      • pinecone.Index                   → legacy 768-dim path
+    """
+    # embed query to 768-dim
+    raw_embedding = await embed_text(query)
+    log.info(f"[RAG] Got raw embedding length {len(raw_embedding)}")
 
+    # resolve encoder + index depending on ctx type
+    if hasattr(ctx, "state"):
+        encoder = getattr(ctx.state, "encoder", None)
+        if encoder:
+            with torch.no_grad():
+                embedding = encoder(torch.tensor(raw_embedding)).tolist()
+            vector_index = ctx.state.vector_index_256
+            log.info("[RAG] Compressed embedding → 256-d")
+        else:
+            embedding = raw_embedding
+            vector_index = ctx.state.vector_index_768
+            log.info("[RAG] Using raw 768-d embedding (no encoder)")
+    else:
+        embedding = raw_embedding
+        vector_index = ctx
+        log.info("[RAG] Legacy path: raw 768-d")
+
+    # query Pinecone
     try:
         result = vector_index.query(
             namespace="",
@@ -46,16 +61,11 @@ async def retrieve_similar_vectors(
         return []
 
     retrieved: List[Dict] = [
-        {
-            "id": m.id,
-            "score": m.score,
-            "metadata": m.metadata,
-        }
+        {"id": m.id, "score": m.score, "metadata": m.metadata}
         for m in result.matches
         if m.score is None or m.score >= relevance_threshold
     ]
     for m in retrieved:
-        log.info(f"[RAG] Retrieved answer vector {m['id']} (score={m['score']})")
+        log.info(f"[RAG] Retrieved {m['id']} (score={m['score']:.3f})")
 
     return retrieved
-

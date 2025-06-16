@@ -13,22 +13,35 @@ from torch.utils.data import DataLoader
 from app.pytorch.model import Autoencoder
 from app.pytorch.dataset import AutoencoderDataset
 from app.pytorch.trainer import train
-from app.vector_db.vector_db import get_index  # existing helper
+from app.vector_db.vector_db import init_pinecone, get_index
 
 log = logging.getLogger(__name__)
 
 
-def fetch_vectors_from_pinecone(sample_size: int = 5000):
-    """Pull a random sample of answer vectors from Pinecone."""
+def fetch_vectors_from_pinecone(max_samples: int = 1000):
+    """
+    Return up to `max_samples` answer vectors from the 768-dim index.
+    Works even when the corpus is small.
+    """
+    init_pinecone()
     index = get_index("agent-knowledge-base")
-    # Pinecone doesn't have a 'list' API in every plan; here we do a dummy vector fetch
-    all_ids = [meta["id"] for meta in index.describe_index_stats()["namespaces"][""]["metadata"]]
-    sample_ids = random.sample(all_ids, min(sample_size, len(all_ids)))
-    vectors = []
-    for chunk in [sample_ids[i : i + 100] for i in range(0, len(sample_ids), 100)]:
-        response = index.fetch(ids=chunk)
-        vectors.extend([v["values"] for v in response.vectors.values()])
+
+    res = index.query(
+        vector=[0.0] * 768,          # dummy query
+        top_k=max_samples,
+        include_values=True,
+        include_metadata=True,
+        filter={"type": "answer"},
+    )
+    vectors = [m.values for m in res.matches if m.values]
+
+    if not vectors:
+        raise RuntimeError("No answer vectors found in the index.")
+
+    print(f"[Autoencoder] Fetched {len(vectors)} vectors for training")
     return vectors
+
+
 
 
 def main():
