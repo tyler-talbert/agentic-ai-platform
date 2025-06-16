@@ -19,9 +19,10 @@ def run_agent(task_id: str, task_input: dict) -> dict:
 
     user_input = task_input.get("input") or str(task_input)
 
-    # ────────── RAG retrieval ────────────────────────────────────────────
-    vector_index = get_index()  # legacy 768-dim index; retriever will switch if encoder present
-    contexts = asyncio.run(retrieve_similar_vectors(user_input, vector_index, top_k=5))
+    # RAG retrieval
+    contexts = asyncio.run(
+        retrieve_similar_vectors(user_input, fastapi_app, top_k=5)
+    )
     log.info(f"[Agent Runner] Retrieved {len(contexts)} answer contexts for RAG")
 
     context_str = "\n\n".join(
