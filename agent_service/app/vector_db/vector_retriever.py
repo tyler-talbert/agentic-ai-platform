@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 async def retrieve_similar_vectors(
     query: str,
-    ctx: Union[Request, Index],
+    ctx: Union[Request, Index, "FastAPI"],
     top_k: int = 5,
     relevance_threshold: float = RELEVANCE_THRESHOLD,
 ) -> List[Dict]:
@@ -22,31 +22,31 @@ async def retrieve_similar_vectors(
     Return answer vectors similar to ``query``.
 
     `ctx` can be:
-      • FastAPI Request  → use encoder & indices on `app.state`
-      • pinecone.Index   → fall back to 768-dim flow (legacy call path)
+      • FastAPI Request **or** FastAPI app → use encoder & indices on ``ctx.state``
+      • pinecone.Index                   → legacy 768-dim path
     """
-    # --- embed -------------------------------------------------------------
-    raw = await embed_text(query)
-    log.info(f"[RAG] Got raw embedding length {len(raw)}")
+    # embed query to 768-dim
+    raw_embedding = await embed_text(query)
+    log.info(f"[RAG] Got raw embedding length {len(raw_embedding)}")
 
-    # --- resolve encoder + index depending on ctx type --------------------
-    if isinstance(ctx, Request):  # new path
-        encoder = getattr(ctx.app.state, "encoder", None)
+    # resolve encoder + index depending on ctx type
+    if hasattr(ctx, "state"):
+        encoder = getattr(ctx.state, "encoder", None)
         if encoder:
             with torch.no_grad():
-                embedding = encoder(torch.tensor(raw)).tolist()
-            vector_index = ctx.app.state.vector_index_256
+                embedding = encoder(torch.tensor(raw_embedding)).tolist()
+            vector_index = ctx.state.vector_index_256
             log.info("[RAG] Compressed embedding → 256-d")
         else:
-            embedding = raw
-            vector_index = ctx.app.state.vector_index_768
+            embedding = raw_embedding
+            vector_index = ctx.state.vector_index_768
             log.info("[RAG] Using raw 768-d embedding (no encoder)")
-    else:  # legacy call with raw Index
-        embedding = raw
+    else:
+        embedding = raw_embedding
         vector_index = ctx
-        log.info("[RAG] Legacy call: raw 768-d path")
+        log.info("[RAG] Legacy path: raw 768-d")
 
-    # --- query Pinecone ----------------------------------------------------
+    # query Pinecone
     try:
         result = vector_index.query(
             namespace="",
