@@ -3,13 +3,12 @@ import logging
 import asyncio
 
 from app.config import SYSTEM_PROMPT
-from app.vector_db.vector_db import get_index
 from app.vector_db.vector_retriever import retrieve_similar_vectors
 from app.vector_db.embed_and_upsert import embed_and_upsert
 from app.llm_interaction import LLMInteraction
 from app.agent_runner.tool_call_parser import ToolCallParser
 from app.agent_runner.tool_dispatcher import ToolDispatcher
-from app.main import app as fastapi_app
+from main import app as fastapi_app
 
 log = logging.getLogger(__name__)
 
