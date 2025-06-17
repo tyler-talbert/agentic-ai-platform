@@ -10,15 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      zookeeper:
+        image: confluentinc/cp-zookeeper:7.5.0
+        ports: [ "2181:2181" ]
+        options: >-
+          -e ZOOKEEPER_CLIENT_PORT=2181
+          --health-cmd="echo ruok | nc -w 2 localhost 2181 || exit 1"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
+
       kafka:
         image: confluentinc/cp-kafka:7.5.0
         ports: [ "9092:9092" ]
         options: >-
-          -e KAFKA_ZOOKEEPER_CONNECT=localhost:2181
-          -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+          -e KAFKA_BROKER_ID=1
+          -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
           -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
           -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-          --health-cmd="bash -c 'echo > /dev/tcp/localhost/9092'"
+          -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+          --health-cmd="bash -c 'cub kafka-ready -b localhost:9092 1 20'"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -27,11 +38,9 @@ jobs:
       CI: "true"
 
     steps:
-    - name: Checkout source
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: "3.11"
 
@@ -45,10 +54,10 @@ jobs:
       run: |
         pip install -r agent_service/requirements.txt
         pip install -r agent_orchestrator/requirements.txt
-        pip install -r requirements-dev.txt   #  ← pytest-asyncio, respx, etc.
+        pip install -r requirements-dev.txt
 
     - name: Add repo to PYTHONPATH
-      run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
+      run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> "$GITHUB_ENV"
 
     - name: Run test suite
       env:
@@ -59,7 +68,6 @@ jobs:
         KAFKA_BROKER:        "localhost:9092"
       run: |
         pytest -q agent_service/tests agent_orchestrator/tests tests
-
 
     - name: Build service images
       run: |
