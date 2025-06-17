@@ -13,6 +13,18 @@ jobs:
       kafka:
         image: confluentinc/cp-kafka:7.5.0
         ports: [ "9092:9092" ]
+        options: >-
+          -e KAFKA_ZOOKEEPER_CONNECT=localhost:2181
+          -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+          -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+          -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+          --health-cmd="bash -c 'echo > /dev/tcp/localhost/9092'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      CI: "true"
 
     steps:
     - name: Checkout source
@@ -33,11 +45,10 @@ jobs:
       run: |
         pip install -r agent_service/requirements.txt
         pip install -r agent_orchestrator/requirements.txt
-        pip install -r requirements-dev.txt
+        pip install -r requirements-dev.txt   #  ← pytest-asyncio, respx, etc.
 
     - name: Add repo to PYTHONPATH
-      run: |
-        echo "PYTHONPATH=$PWD:$PWD/agent_orchestrator:$PWD/agent_service:$PYTHONPATH" >> $GITHUB_ENV
+      run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
 
     - name: Run test suite
       env:
@@ -48,6 +59,7 @@ jobs:
         KAFKA_BROKER:        "localhost:9092"
       run: |
         pytest -q agent_service/tests agent_orchestrator/tests tests
+
 
     - name: Build service images
       run: |

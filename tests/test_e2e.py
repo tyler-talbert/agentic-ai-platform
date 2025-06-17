@@ -4,6 +4,10 @@ import sys
 import httpx
 import pytest
 
+if os.getenv("CI", "false").lower() == "true":
+    pytest.skip("Docker stack not running in CI", allow_module_level=True)
+
+
 ORCHESTRATOR_URL = os.getenv("ORCH_URL", "http://localhost:4000")
 AGENT_URL        = os.getenv("AGENT_URL", "http://localhost:4001")
 
