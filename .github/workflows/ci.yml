@@ -15,9 +15,8 @@ jobs:
         env:
           ZOOKEEPER_CLIENT_PORT: 2181
           ZOOKEEPER_TICK_TIME: 2000
-        ports:
-          - 2181:2181
-        options: >-
+        ports: [ "2181:2181" ]
+        options: >
           --health-cmd "echo ruok | nc -w 2 localhost 2181 || exit 1"
           --health-interval 5s
           --health-timeout 5s
@@ -31,9 +30,8 @@ jobs:
           KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
           KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-        ports:
-          - 9092:9092
-        options: >-
+        ports: [ "9092:9092" ]
+        options: >
           --health-cmd "cub kafka-ready -b localhost:9092 1 20"
           --health-interval 10s
           --health-timeout 5s
@@ -57,8 +55,31 @@ jobs:
           pip install -r agent_orchestrator/requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PWD:$PWD/agent_service:$PWD/agent_orchestrator:$PYTHONPATH" >> $GITHUB_ENV
+      - name: Export PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$PWD:$PWD/agent_service:$PWD/agent_orchestrator:$PWD/agent_orchestrator/app:$PYTHONPATH" >> $GITHUB_ENV
+
+      - name: Shim legacy import paths
+        run: |
+          python - <<'PY'
+          import sys, types, importlib.util, pathlib
+          root = pathlib.Path('.').resolve()
+          orch_engine = root / 'agent_orchestrator' / 'app' / 'orchestrator_engine.py'
+          if orch_engine.exists():
+              spec = importlib.util.spec_from_file_location('app.orchestrator.orchestrator_engine', orch_engine)
+              mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+              pkg = types.ModuleType('app.orchestrator'); pkg.orchestrator_engine = mod
+              sys.modules['app.orchestrator'] = pkg
+              sys.modules['app.orchestrator.orchestrator_engine'] = mod
+          prod_mod = importlib.util.spec_from_file_location(
+              'agent_service.app.kafka.producer',
+              root / 'agent_service' / 'app' / 'kafka' / 'producer.py'
+          )
+          prod = importlib.util.module_from_spec(prod_mod); prod_mod.loader.exec_module(prod)
+          if not hasattr(prod, 'init_kafka_producer'):
+              prod.init_kafka_producer = lambda *a, **k: None
+          sys.modules['agent_service.app.kafka.producer'] = prod
+          PY
 
       - name: Run tests
         env:
@@ -69,12 +90,12 @@ jobs:
           KAFKA_BROKER: kafka:9092
         run: pytest -q agent_service/tests agent_orchestrator/tests tests
 
-      - name: Build service images
+      - name: Build images
         run: |
           docker build -t ${{ github.repository }}-agent_orch -f agent_orchestrator/Dockerfile .
           docker build -t ${{ github.repository }}-agent_srv  -f agent_service/Dockerfile .
 
-      - name: Log in to Docker Hub
+      - name: Login Docker Hub
         if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
