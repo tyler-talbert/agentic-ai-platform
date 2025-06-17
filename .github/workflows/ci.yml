@@ -12,10 +12,10 @@ jobs:
     services:
       kafka:
         image: confluentinc/cp-kafka:7.5.0
-        ports: [9092:9092]
+        ports: [ "9092:9092" ]
 
     steps:
-    - name: Check out code
+    - name: Checkout source
       uses: actions/checkout@v4
 
     - name: Set up Python
@@ -27,13 +27,16 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
 
-    - name: Install deps
+    - name: Install project dependencies
       run: |
-        pip install -r agent_orchestrator/requirements.txt
         pip install -r agent_service/requirements.txt
-        pip install pytest
+        pip install -r agent_orchestrator/requirements.txt
+        pip install -r requirements-dev.txt          # pytest, respx, etc.
+        # editable installs so `import agent_service …` resolves
+        pip install -e agent_service
+        pip install -e agent_orchestrator
 
     - name: Run unit + integration tests
       env:
@@ -45,10 +48,10 @@ jobs:
       run: |
         pytest -q agent_service/tests agent_orchestrator/tests tests
 
-    - name: Build multi-service images
+    - name: Build multi-service Docker images
       run: |
-        docker build -t ${{ github.repository }}-agent_orch   -f agent_orchestrator/Dockerfile .
-        docker build -t ${{ github.repository }}-agent_srv    -f agent_service/Dockerfile .
+        docker build -t ${{ github.repository }}-agent_orch -f agent_orchestrator/Dockerfile .
+        docker build -t ${{ github.repository }}-agent_srv  -f agent_service/Dockerfile .
 
     - name: Log in to Docker Hub
       if: github.ref == 'refs/heads/main'
@@ -57,10 +60,10 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USER }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Docker push
+    - name: Push images to Docker Hub
       if: github.ref == 'refs/heads/main'
       run: |
-        docker tag ${{ github.repository }}-agent_orch  ${{ secrets.DOCKERHUB_USER }}/agent-orchestrator:latest
-        docker tag ${{ github.repository }}-agent_srv   ${{ secrets.DOCKERHUB_USER }}/agent-service:latest
+        docker tag ${{ github.repository }}-agent_orch ${{ secrets.DOCKERHUB_USER }}/agent-orchestrator:latest
+        docker tag ${{ github.repository }}-agent_srv  ${{ secrets.DOCKERHUB_USER }}/agent-service:latest
         docker push ${{ secrets.DOCKERHUB_USER }}/agent-orchestrator:latest
         docker push ${{ secrets.DOCKERHUB_USER }}/agent-service:latest
