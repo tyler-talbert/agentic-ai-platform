@@ -16,11 +16,8 @@ jobs:
           ZOOKEEPER_CLIENT_PORT: 2181
           ZOOKEEPER_TICK_TIME: 2000
         ports: [ "2181:2181" ]
-        options: >
-          --health-cmd "echo ruok | nc -w 2 localhost 2181 || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 8
+        options: >-
+          --health-cmd="echo ruok | nc -w 2 localhost 2181 || exit 1" --health-interval=5s --health-timeout=5s --health-retries=8
 
       kafka:
         image: confluentinc/cp-kafka:7.5.0
@@ -31,11 +28,8 @@ jobs:
           KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
         ports: [ "9092:9092" ]
-        options: >
-          --health-cmd "cub kafka-ready -b localhost:9092 1 20"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
+        options: >-
+          --health-cmd="cub kafka-ready -b localhost:9092 1 20" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - uses: actions/checkout@v4
@@ -71,11 +65,11 @@ jobs:
               pkg = types.ModuleType('app.orchestrator'); pkg.orchestrator_engine = mod
               sys.modules['app.orchestrator'] = pkg
               sys.modules['app.orchestrator.orchestrator_engine'] = mod
-          prod_mod = importlib.util.spec_from_file_location(
+          prod_spec = importlib.util.spec_from_file_location(
               'agent_service.app.kafka.producer',
               root / 'agent_service' / 'app' / 'kafka' / 'producer.py'
           )
-          prod = importlib.util.module_from_spec(prod_mod); prod_mod.loader.exec_module(prod)
+          prod = importlib.util.module_from_spec(prod_spec); prod_spec.loader.exec_module(prod)
           if not hasattr(prod, 'init_kafka_producer'):
               prod.init_kafka_producer = lambda *a, **k: None
           sys.modules['agent_service.app.kafka.producer'] = prod
