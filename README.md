@@ -121,6 +121,18 @@ These environment variables enable the compressed 256-dimension embedding flow:
 ↓  
 [Final Response → Gateway → User]
 
+### gRPC Quick Start
+
+The `agent_service` exposes a gRPC endpoint on port `50051` for low-latency task
+execution. When running via Docker Compose, you can hit it directly:
+
+```bash
+grpcurl -plaintext localhost:50051 agent.AgentService/RunTask \
+    -d '{"task_id":"demo","payload":"ping"}'
+```
+
+A successful response will return a `COMPLETED` status and the agent output.
+
 ---
 
 ## 🔍 Use Cases Simulated
