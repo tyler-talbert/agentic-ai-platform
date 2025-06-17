@@ -2,8 +2,8 @@ services:
   agent_orchestrator:
     container_name: orchestrator
     build:
-      context: ./agent_orchestrator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: agent_orchestrator/Dockerfile
     image: agentic-ai-platform-orchestrator
     ports:
       - "4000:8000"
@@ -32,11 +32,12 @@ services:
   agent_service:
     container_name: agent_service
     build:
-      context: ./agent_service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: agent_service/Dockerfile
     image: agentic-ai-platform-agent
     ports:
       - "4001:4001"
+      - "50051:50051"
     environment:
       KAFKA_BROKER:      "kafka:9092"
       TOPIC_IN:          "agent-tasks-inbound"
