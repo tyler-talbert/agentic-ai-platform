@@ -21,7 +21,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: "3.12"
+        python-version: "3.11"
 
     - name: Cache pip
       uses: actions/cache@v4
@@ -36,7 +36,8 @@ jobs:
         pip install -r requirements-dev.txt
 
     - name: Add repo to PYTHONPATH
-      run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
+      run: |
+        echo "PYTHONPATH=$PWD:$PWD/agent_orchestrator:$PWD/agent_service:$PYTHONPATH" >> $GITHUB_ENV
 
     - name: Run test suite
       env:
