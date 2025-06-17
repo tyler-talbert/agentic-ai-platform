@@ -5,3 +5,5 @@ confluent-kafka
 kafka-python
 structlog
 pinecone-client==3.2.2
+grpcio
+grpcio-tools
