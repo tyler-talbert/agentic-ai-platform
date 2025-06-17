@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
 from app.kafka.consumer import consume_kafka_messages
+from app.grpc_server import serve as grpc_serve
+from app.agent_runner.agent_runner import set_fastapi_app
 from app.vector_db.vector_db import (
     init_pinecone,
     create_index,
@@ -45,6 +47,7 @@ async def lifespan(app: FastAPI):
     print("[Agent Service] Starting Kafka consumer...", flush=True)
     loop = asyncio.get_event_loop()
     loop.create_task(consume_kafka_messages())
+    loop.create_task(grpc_serve())
 
     yield
 
@@ -52,6 +55,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+set_fastapi_app(app)
 
 @app.get("/health")
 def health_check():

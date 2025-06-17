@@ -13,6 +13,7 @@ from app.orchestrator.agent_router import router as agent_router
 from app.kafka.consumer import consume_kafka_results
 from app.kafka.producer import init_kafka_producer
 import httpx
+from app.grpc_client import run_task as grpc_run_task
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -55,6 +56,14 @@ def health_check():
 
 @app.get("/run-agent")
 async def run_agent():
-    async with httpx.AsyncClient() as client:
-        response = await client.get("http://agent_service:4001/health")
-        return {"agent_response": response.json()}
+    resp = await grpc_run_task("ping", "ping")
+    if resp is None:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://agent_service:4001/health")
+            return {"agent_response": response.json()}
+    return {
+        "agent_response": {
+            "status": resp.status,
+            "output": resp.output,
+        }
+    }

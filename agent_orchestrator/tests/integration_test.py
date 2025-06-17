@@ -45,10 +45,8 @@ def test_cross_service_call(client):
         assert res.json()["agent_response"]["status"] == "agent_service is healthy"
 
 
-@patch("app.orchestrator.orchestrator_engine.embed_text", new_callable=AsyncMock)
 @patch("app.orchestrator.orchestrator_engine.produce_task")
-def test_task_submission_endpoint(mock_produce_task, mock_embed_text, client):
-    mock_embed_text.return_value = [0.1] * 1536
+def test_task_submission_endpoint(mock_produce_task, client):
 
     payload = {"input": "hello test"}
     res = client.post("/v1/tasks", json=payload)

@@ -8,19 +8,37 @@ from app.vector_db.embed_and_upsert import embed_and_upsert
 from app.llm_interaction import LLMInteraction
 from app.agent_runner.tool_call_parser import ToolCallParser
 from app.agent_runner.tool_dispatcher import ToolDispatcher
-from main import app as fastapi_app
+
+from fastapi import FastAPI
+
+_APP: FastAPI | None = None
+
+
+def set_fastapi_app(app: FastAPI) -> None:
+    """Register the FastAPI app for vector DB access."""
+    global _APP
+    _APP = app
+
 
 log = logging.getLogger(__name__)
 
+def _get_app() -> FastAPI:
+    if _APP is None:
+        raise RuntimeError("FastAPI app not initialised for agent runner")
+    return _APP
+
 
 def run_agent(task_id: str, task_input: dict) -> dict:
-    log.info(f"[Agent Runner] Running agent for task_id={task_id}, input={task_input}")
+    log.info(
+        f"[Agent Runner] Running agent for task_id={task_id}, input={task_input}"
+    )
 
     user_input = task_input.get("input") or str(task_input)
 
     # RAG retrieval
+    app = _get_app()
     contexts = asyncio.run(
-        retrieve_similar_vectors(user_input, fastapi_app, top_k=5)
+        retrieve_similar_vectors(user_input, app, top_k=5)
     )
     log.info(f"[Agent Runner] Retrieved {len(contexts)} answer contexts for RAG")
 
@@ -50,7 +68,7 @@ def run_agent(task_id: str, task_input: dict) -> dict:
                 task_id,
                 tool_response,
                 is_answer=True,
-                app=fastapi_app,
+                app=_get_app(),
             )
         )
 
@@ -67,7 +85,7 @@ def run_agent(task_id: str, task_input: dict) -> dict:
             task_id,
             response_content,
             is_answer=True,
-            app=fastapi_app,
+            app=_get_app(),
         )
     )
 
