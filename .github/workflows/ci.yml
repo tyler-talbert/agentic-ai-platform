@@ -81,7 +81,7 @@ jobs:
           PINECONE_INDEX_NAME: agent_knowledge-base-256
           PINECONE_ENV: test-env
           OLLAMA_BASE_URL: http://localhost:11434
-          KAFKA_BROKER: kafka:9092
+          KAFKA_BROKER: localhost:9092
         run: pytest -q agent_service/tests agent_orchestrator/tests tests
 
       - name: Build images
