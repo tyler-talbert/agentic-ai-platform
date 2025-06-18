@@ -37,7 +37,7 @@ def test_health_check(client):
 async def test_cross_service_call(client, monkeypatch):
     monkeypatch.setattr(
         "agent_orchestrator.main.grpc_run_task",
-        AsyncMock(return_value="pong"),
+        AsyncMock(return_value=MagicMock(status="SUCCESS", output="pong")),
     )
 
     mock_resp = httpx.Response(200, json={"status": "agent_service is healthy"})
