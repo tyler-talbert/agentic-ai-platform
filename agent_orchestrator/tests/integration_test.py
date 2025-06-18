@@ -35,10 +35,9 @@ def test_health_check(client):
 
 @pytest.mark.asyncio
 async def test_cross_service_call(client, monkeypatch):
-    # Short-circuit the real gRPC call
-    from agent_orchestrator.app import grpc_client
     monkeypatch.setattr(
-        grpc_client, "run_task", AsyncMock(return_value="pong")
+        "agent_orchestrator.main.grpc_run_task",
+        AsyncMock(return_value="pong"),
     )
 
     mock_resp = httpx.Response(200, json={"status": "agent_service is healthy"})
