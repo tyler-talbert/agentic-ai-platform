@@ -20,7 +20,7 @@ jobs:
           --health-cmd="echo ruok | nc -w 2 localhost 2181 || exit 1" --health-interval=5s --health-timeout=5s --health-retries=8
 
       kafka:
-        image: confluentinc/cp-kafka_client:7.5.0
+        image: confluentinc/cp-kafka:7.5.0
         env:
           KAFKA_BROKER_ID: 1
           KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
