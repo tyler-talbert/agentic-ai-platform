@@ -4,7 +4,7 @@ import torch
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from app.kafka.consumer import consume_kafka_messages
+from app.kafka_client.consumer import consume_kafka_messages
 from app.grpc_server import serve as grpc_serve
 from app.agent_runner.agent_runner import set_fastapi_app
 from app.vector_db.vector_db import (

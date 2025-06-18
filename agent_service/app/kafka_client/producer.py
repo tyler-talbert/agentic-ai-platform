@@ -3,7 +3,7 @@ import json
 import os
 import time
 
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka_client:9092")
 TOPIC_OUT = os.getenv("TOPIC_OUT", "agent-tasks-completed")
 
 def get_kafka_producer(retries=5, delay=2):

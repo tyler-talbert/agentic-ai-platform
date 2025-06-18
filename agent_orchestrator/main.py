@@ -10,8 +10,8 @@ from app.vector_db.vector_db import (
     get_index,
 )
 from app.orchestrator.agent_router import router as agent_router
-from app.kafka.consumer import consume_kafka_results
-from app.kafka.producer import init_kafka_producer
+from app.kafka_client.consumer import consume_kafka_results
+from app.kafka_client.producer import init_kafka_producer
 import httpx
 from app.grpc_client import run_task as grpc_run_task
 

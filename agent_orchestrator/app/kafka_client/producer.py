@@ -5,7 +5,7 @@ import os
 from kafka import KafkaProducer, errors
 from ..orchestrator.task_model import AgentTask
 
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka_client:9092")
 TOPIC_IN     = os.getenv("TOPIC_IN",    "agent-tasks-inbound")
 
 producer = None

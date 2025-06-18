@@ -20,7 +20,7 @@ jobs:
           --health-cmd="echo ruok | nc -w 2 localhost 2181 || exit 1" --health-interval=5s --health-timeout=5s --health-retries=8
 
       kafka:
-        image: confluentinc/cp-kafka:7.5.0
+        image: confluentinc/cp-kafka_client:7.5.0
         env:
           KAFKA_BROKER_ID: 1
           KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -66,13 +66,13 @@ jobs:
               sys.modules['app.orchestrator'] = pkg
               sys.modules['app.orchestrator.orchestrator_engine'] = mod
           prod_spec = importlib.util.spec_from_file_location(
-              'agent_service.app.kafka.producer',
-              root / 'agent_service' / 'app' / 'kafka' / 'producer.py'
+              'agent_service.app.kafka_client.producer',
+              root / 'agent_service' / 'app' / 'kafka_client' / 'producer.py'
           )
           prod = importlib.util.module_from_spec(prod_spec); prod_spec.loader.exec_module(prod)
           if not hasattr(prod, 'init_kafka_producer'):
               prod.init_kafka_producer = lambda *a, **k: None
-          sys.modules['agent_service.app.kafka.producer'] = prod
+          sys.modules['agent_service.app.kafka_client.producer'] = prod
           PY
 
       - name: Run tests

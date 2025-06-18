@@ -39,7 +39,7 @@ services:
       - "4001:4001"
       - "50051:50051"
     environment:
-      KAFKA_BROKER:      "kafka:9092"
+      KAFKA_BROKER:      "kafka_client:9092"
       TOPIC_IN:          "agent-tasks-inbound"
       TOPIC_OUT:         "agent-tasks-completed"
       OLLAMA_BASE_URL:   "http://ollama:11434"
@@ -84,7 +84,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka
+    container_name: kafka_client
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -94,7 +94,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka_client:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_WAIT_FOR_ZOOKEEPER: "yes"

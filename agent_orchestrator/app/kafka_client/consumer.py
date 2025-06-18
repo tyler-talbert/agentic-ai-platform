@@ -8,7 +8,7 @@ from app.orchestrator.task_store import TASK_STORE
 
 log = logging.getLogger(__name__)
 
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka_client:9092")
 TOPIC_OUT    = os.getenv("TOPIC_OUT",    "agent-tasks-completed")
 
 

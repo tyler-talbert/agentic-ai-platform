@@ -8,7 +8,7 @@ from kafka.errors import NoBrokersAvailable
 
 def blocking_consume_loop():
     topic = os.getenv("TOPIC_IN", "agent-tasks-inbound")
-    broker = os.getenv("KAFKA_BROKER", "kafka:9092")
+    broker = os.getenv("KAFKA_BROKER", "kafka_client:9092")
 
     print(f"[Kafka Consumer] Attempting to connect to Kafka at {broker} and subscribe to topic '{topic}'")
 
@@ -33,7 +33,7 @@ def blocking_consume_loop():
         raise RuntimeError("Kafka was not available after retries")
 
     from app.agent_runner import run_agent
-    from app.kafka.producer import produce_result
+    from app.kafka_client.producer import produce_result
 
     for message in consumer:
         task_data = message.value
