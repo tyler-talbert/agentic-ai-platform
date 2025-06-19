@@ -1,8 +1,16 @@
 import os, json, time, asyncio, logging
 from typing import Any
 
-from kafka import KafkaConsumer
-from kafka.errors import NoBrokersAvailable
+try:
+    from kafka import KafkaConsumer
+    from kafka.errors import NoBrokersAvailable
+except Exception:
+    class KafkaConsumer:
+        pass
+
+    class NoBrokersAvailable(Exception):
+        pass
+
 
 from app.orchestrator.task_store import TASK_STORE
 

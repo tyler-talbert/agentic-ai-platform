@@ -1,4 +1,13 @@
-from kafka import KafkaProducer, errors
+try:
+    from kafka import KafkaProducer, errors
+except Exception:
+    class KafkaProducer:  # type: ignore
+        pass
+
+    class _Err:
+        class NoBrokersAvailable(Exception):
+            pass
+    errors = _Err()
 import json
 import os
 import time
@@ -18,8 +27,17 @@ def get_kafka_producer(retries=5, delay=2):
             time.sleep(delay)
     raise Exception("Kafka broker unavailable after retries")
 
+
 def produce_result(payload: dict):
     producer = get_kafka_producer()
     producer.send(TOPIC_OUT, value=payload)
     producer.flush()
     print(f"[Kafka Producer] Sent completed task {payload.get('task_id')}")
+
+def init_kafka_producer(*args, **kwargs):
+    """Initialize and return a Kafka producer.
+
+    Exists so integration tests can patch the same function as in the
+    orchestrator service without pulling in real Kafka dependencies.
+    """
+    return get_kafka_producer(*args, **kwargs)

@@ -2,8 +2,15 @@ import os
 import json
 import time
 import asyncio
-from kafka import KafkaConsumer
-from kafka.errors import NoBrokersAvailable
+try:
+    from kafka import KafkaConsumer
+    from kafka.errors import NoBrokersAvailable
+except Exception:  # pragma: no cover - optional Kafka dependency
+    class KafkaConsumer:  # type: ignore
+        pass
+
+    class NoBrokersAvailable(Exception):
+        pass
 
 
 def blocking_consume_loop():

@@ -2,7 +2,20 @@ from app.logger import setup_logger
 import json
 import time
 import os
-from kafka import KafkaProducer, errors
+try:
+    from kafka import KafkaProducer, errors
+except Exception:  # pragma: no cover - optional Kafka dependency
+    class _Dummy:
+        def __getattr__(self, name):
+            raise RuntimeError("Kafka dependencies not installed")
+
+    KafkaProducer = _Dummy()
+    class _Err:  # minimal errors namespace
+        class NoBrokersAvailable(Exception):
+            pass
+        class KafkaTimeoutError(Exception):
+            pass
+    errors = _Err()
 from ..orchestrator.task_model import AgentTask
 
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka_client:9092")
