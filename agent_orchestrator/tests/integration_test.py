@@ -14,7 +14,8 @@ _fake_client.list_indexes().names.return_value = ["agent-knowledge-base"]
 _fake_client.Index.return_value = _fake_index
 
 with patch("pinecone.Pinecone", return_value=_fake_client), \
-     patch("app.kafka_client.producer.init_kafka_producer", return_value=MagicMock()):
+        patch("app.kafka_client.producer.init_kafka_producer", return_value=MagicMock()), \
+        patch("app.kafka_client.consumer.consume_kafka_results", new_callable=AsyncMock):
 
     from agent_orchestrator.main import app  # noqa: E402
 
