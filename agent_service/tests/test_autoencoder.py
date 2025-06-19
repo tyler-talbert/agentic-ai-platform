@@ -1,5 +1,6 @@
 import unittest
-import torch
+import pytest
+torch = pytest.importorskip("torch")
 from torch.utils.data import DataLoader
 
 from agent_service.app.pytorch.model import Autoencoder

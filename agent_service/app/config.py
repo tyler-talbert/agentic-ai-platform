@@ -9,7 +9,8 @@ Available tools:
    - Use when: User asks for research, papers, studies, academic information, latest findings
    - Format: {"tool": "Scholar", "arguments": {"query": "search terms", "result_type": "latest|relevant", "count": "number"}}
 
-2. **Search** - For general web search and current information  
+2. **Search** - For general web search and current information ("Knowledge" is
+   an alias that maps to this tool)
    - Use when: User asks for current events, news, general information lookup
    - Format: {"tool": "Search", "arguments": {"query": "search terms"}}
 

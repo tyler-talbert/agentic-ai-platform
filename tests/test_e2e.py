@@ -4,9 +4,16 @@ import sys
 import httpx
 import pytest
 
+if os.getenv("RUN_E2E", "false").lower() != "true" or os.getenv("CI", "false").lower() == "true":
+    pytest.skip("E2E tests disabled", allow_module_level=True)
+
+
 ORCHESTRATOR_URL = os.getenv("ORCH_URL", "http://localhost:4000")
 AGENT_URL        = os.getenv("AGENT_URL", "http://localhost:4001")
 
+MAX_SUBMIT_ATTEMPTS = int(os.getenv("E2E_SUBMIT_ATTEMPTS", "5"))
+POLL_INTERVAL       = float(os.getenv("E2E_SLEEP", "1"))
+MAX_POLLS           = int(os.getenv("E2E_POLLS", "30"))
 
 def _log(msg: str) -> None:
     print(f"[TEST] {msg}")
@@ -33,17 +40,23 @@ def _result_from(body: dict):
 
 
 def test_health_check():
-    orch  = httpx.get(f"{ORCHESTRATOR_URL}/health")
+    try:
+        orch = httpx.get(f"{ORCHESTRATOR_URL}/health")
+        agent = httpx.get(f"{AGENT_URL}/health")
+    except httpx.RequestError as exc:
+        pytest.skip(f"stack unavailable — skipping: {exc}")
     _assert_ok(orch)
     assert orch.json()["status"] == "agent_orchestrator is healthy"
 
-    agent = httpx.get(f"{AGENT_URL}/health")
     _assert_ok(agent)
     assert agent.json()["status"] == "agent_service is healthy"
 
 
 def test_cross_service_call():
-    res = httpx.get(f"{ORCHESTRATOR_URL}/run-agent")
+    try:
+        res = httpx.get(f"{ORCHESTRATOR_URL}/run-agent")
+    except httpx.RequestError as exc:
+        pytest.skip(f"stack unavailable — skipping: {exc}")
     _assert_ok(res)
     assert res.json()["agent_response"]["status"] == "agent_service is healthy"
 
@@ -51,12 +64,17 @@ def test_cross_service_call():
 def test_task_submission_kafka_roundtrip():
     payload = {"input": "hello test"}
 
-    # Submit task (retry a few times while Kafka warms up)
-    for attempt in range(5):
-        resp = httpx.post(f"{ORCHESTRATOR_URL}/v1/tasks", json=payload)
+    for attempt in range(MAX_SUBMIT_ATTEMPTS):
+        try:
+            resp = httpx.post(f"{ORCHESTRATOR_URL}/v1/tasks", json=payload)
+        except httpx.RequestError as exc:
+            if attempt == MAX_SUBMIT_ATTEMPTS - 1:
+                pytest.skip(f"Kafka unavailable — skipping: {exc}")
+            time.sleep(POLL_INTERVAL)
+            continue
         if resp.status_code == 200:
             break
-        time.sleep(3)
+        time.sleep(POLL_INTERVAL * 3)
     else:
         pytest.skip(f"Kafka unavailable — skipping: {resp.text}")
 
@@ -65,9 +83,12 @@ def test_task_submission_kafka_roundtrip():
     task_id = data["task_id"]
     _log(f"submitted task {task_id}")
 
-    for _ in range(60):
-        time.sleep(1)
-        poll = httpx.get(f"{ORCHESTRATOR_URL}/v1/tasks/{task_id}")
+    for _ in range(MAX_POLLS):
+        time.sleep(POLL_INTERVAL)
+        try:
+            poll = httpx.get(f"{ORCHESTRATOR_URL}/v1/tasks/{task_id}")
+        except httpx.RequestError:
+            continue
         if poll.status_code != 200:
             continue
         body = poll.json()

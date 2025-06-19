@@ -2,11 +2,14 @@ import logging
 import os
 from typing import List, Dict, Union
 
-import torch
+try:
+    import torch
+except ModuleNotFoundError:
+    torch = None
 from fastapi import Request
-from pinecone import Index
+from typing import Any
 
-from app.vector_db.embedder import embed_text
+from .embedder import embed_text
 
 RELEVANCE_THRESHOLD = float(os.getenv("RELEVANCE_THRESHOLD", "0.75"))
 log = logging.getLogger(__name__)
@@ -14,7 +17,7 @@ log = logging.getLogger(__name__)
 
 async def retrieve_similar_vectors(
     query: str,
-    ctx: Union[Request, Index, "FastAPI"],
+    ctx: Union[Request, Any, "FastAPI"],
     top_k: int = 5,
     relevance_threshold: float = RELEVANCE_THRESHOLD,
 ) -> List[Dict]:
@@ -23,7 +26,7 @@ async def retrieve_similar_vectors(
 
     `ctx` can be:
       • FastAPI Request **or** FastAPI app → use encoder & indices on ``ctx.state``
-      • pinecone.Index                   → legacy 768-dim path
+      • pinecone index object            → legacy 768-dim path
     """
     # embed query to 768-dim
     raw_embedding = await embed_text(query)
@@ -33,6 +36,8 @@ async def retrieve_similar_vectors(
     if hasattr(ctx, "state"):
         encoder = getattr(ctx.state, "encoder", None)
         if encoder:
+            if torch is None:
+                raise RuntimeError("torch is required when using an encoder")
             with torch.no_grad():
                 embedding = encoder(torch.tensor(raw_embedding)).tolist()
             vector_index = ctx.state.vector_index_256

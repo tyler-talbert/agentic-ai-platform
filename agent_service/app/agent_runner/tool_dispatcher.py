@@ -9,7 +9,7 @@ class ToolDispatcher:
         """Dispatch the tool call to the appropriate handler"""
         tool_name = tool_call.get("tool", "").lower()
 
-        if tool_name == "search":
+        if tool_name in ("search", "knowledge"):
             return SearchTool().handle(tool_call.get("args", {}))
         elif tool_name == "scholar":
             return ScholarTool().handle(tool_call.get("args", {}))

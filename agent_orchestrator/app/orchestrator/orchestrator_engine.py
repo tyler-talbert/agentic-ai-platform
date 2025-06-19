@@ -1,7 +1,7 @@
 import logging, asyncio, json
 from fastapi import Request
 
-from app.kafka.producer import produce_task
+from app.kafka_client.producer import produce_task
 from app.orchestrator.task_model import AgentTask
 from app.orchestrator.task_store import TASK_STORE
 

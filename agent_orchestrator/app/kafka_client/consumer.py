@@ -1,14 +1,22 @@
 import os, json, time, asyncio, logging
 from typing import Any
 
-from kafka import KafkaConsumer
-from kafka.errors import NoBrokersAvailable
+try:
+    from kafka import KafkaConsumer
+    from kafka.errors import NoBrokersAvailable
+except Exception:
+    class KafkaConsumer:
+        pass
+
+    class NoBrokersAvailable(Exception):
+        pass
+
 
 from app.orchestrator.task_store import TASK_STORE
 
 log = logging.getLogger(__name__)
 
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka_client:9092")
 TOPIC_OUT    = os.getenv("TOPIC_OUT",    "agent-tasks-completed")
 
 
