@@ -8,7 +8,7 @@ services:
     ports:
       - "4000:8000"
     volumes:
-      - ./agent_orchestrator:/app
+      - ./agent_orchestrator:/app/agent_orchestrator
     environment:
       PINECONE_API_KEY: "${PINECONE_API_KEY}"
       PINECONE_ENV: "gcp-starter"
