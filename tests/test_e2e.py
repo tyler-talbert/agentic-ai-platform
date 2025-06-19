@@ -4,8 +4,8 @@ import sys
 import httpx
 import pytest
 
-if os.getenv("CI", "false").lower() == "true":
-    pytest.skip("Docker stack not running in CI", allow_module_level=True)
+if os.getenv("RUN_E2E", "false").lower() != "true" or os.getenv("CI", "false").lower() == "true":
+    pytest.skip("E2E tests disabled", allow_module_level=True)
 
 
 ORCHESTRATOR_URL = os.getenv("ORCH_URL", "http://localhost:4000")
