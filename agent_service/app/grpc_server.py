@@ -9,17 +9,27 @@ except Exception as e:  # pragma: no cover - optional runtime
     agent_pb2_grpc = None
     _IMPORT_ERROR = e
 
+import asyncio
 from app.agent_runner.agent_runner import run_agent
+from app.kafka_client.producer import produce_result
 
 
 if agent_pb2_grpc:
     class _AgentServicer(agent_pb2_grpc.AgentServiceServicer):
         async def RunTask(self, request, context):
-            result = run_agent(request.task_id, {"input": request.payload})
-            return agent_pb2.TaskReply(
-                status=result.get("status", ""),
-                output=str(result.get("output", "")),
+            if not request.task_id or not request.payload:
+                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+                context.set_details("task_id and payload required")
+                return agent_pb2.TaskReply(status="FAILED", output="")
+
+            loop = asyncio.get_running_loop()
+            result = await loop.run_in_executor(
+                None, run_agent, request.task_id, {"input": request.payload}
             )
+            output = result.get("output", "")
+            produce_result({"task_id": request.task_id, "output": output})
+
+            return agent_pb2.TaskReply(status="COMPLETED", output=str(output))
 else:
     _AgentServicer = None
 
