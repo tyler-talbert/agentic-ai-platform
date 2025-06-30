@@ -80,6 +80,36 @@ jobs:
           sys.modules['agent_service.app.kafka_client.producer'] = prod
           PY
 
+      - name: Cache grpcurl
+        id: grpcurl-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/grpcurl
+          key: grpcurl-v1
+
+      - name: Install grpcurl
+        if: steps.grpcurl-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -L https://github.com/fullstorydev/grpcurl/releases/download/v1.8.9/grpcurl_1.8.9_linux_x86_64.tar.gz -o grpcurl.tgz
+          mkdir -p ~/grpcurl
+          tar -xzf grpcurl.tgz -C ~/grpcurl
+          echo "PATH=$HOME/grpcurl:$PATH" >> $GITHUB_ENV
+
+      - name: Add grpcurl to PATH
+        if: steps.grpcurl-cache.outputs.cache-hit == 'true'
+        run: echo "PATH=$HOME/grpcurl:$PATH" >> $GITHUB_ENV
+
+      - name: Launch services
+        run: docker compose -f docker-compose.yml up -d --no-deps agent_service agent_orchestrator
+
+      - name: gRPC health check
+        run: |
+          for i in {1..10}; do
+            if grpcurl -plaintext localhost:50051 list > /dev/null 2>&1; then exit 0; fi
+            sleep 3
+          done
+          exit 1
+
       - name: Run tests
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
@@ -87,6 +117,7 @@ jobs:
           PINECONE_ENV: test-env
           OLLAMA_BASE_URL: http://localhost:11434
           KAFKA_BROKER: localhost:9092
+          AGENT_GRPC_URL: localhost:50051
         run: pytest -q agent_service/tests agent_orchestrator/tests tests
 
       - name: Build images
