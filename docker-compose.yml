@@ -12,6 +12,7 @@ services:
     environment:
       PINECONE_API_KEY: "${PINECONE_API_KEY}"
       PINECONE_ENV: "gcp-starter"
+      KAFKA_BROKER: "${KAFKA_BROKER:-kafka_client:9092}"
       PINECONE_INDEX_DIM:   "${OLLAMA_EMBEDDING_DIM}"
       OLLAMA_EMBEDDING_URL: "http://ollama:11434/api/embeddings"
       OLLAMA_EMBEDDING_MODEL: "nomic-embed-text"
@@ -39,7 +40,7 @@ services:
       - "4001:4001"
       - "50051:50051"
     environment:
-      KAFKA_BROKER:      "kafka_client:9092"
+      KAFKA_BROKER:      "${KAFKA_BROKER:-kafka_client:9092}"
       TOPIC_IN:          "agent-tasks-inbound"
       TOPIC_OUT:         "agent-tasks-completed"
       OLLAMA_BASE_URL:   "http://ollama:11434"

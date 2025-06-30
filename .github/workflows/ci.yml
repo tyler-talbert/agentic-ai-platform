@@ -100,6 +100,10 @@ jobs:
         run: echo "PATH=$HOME/grpcurl:$PATH" >> $GITHUB_ENV
 
       - name: Launch services
+        env:
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_ENV: test-env
+          KAFKA_BROKER: host.docker.internal:9092
         run: docker compose -f docker-compose.yml up -d --no-deps agent_service agent_orchestrator
 
       - name: gRPC health check
