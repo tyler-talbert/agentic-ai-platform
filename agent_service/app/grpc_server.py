@@ -1,10 +1,12 @@
 try:
     import grpc
     from grpc import aio
+    from grpc_reflection.v1alpha import reflection
     from proto import agent_pb2, agent_pb2_grpc
 except Exception as e:  # pragma: no cover - optional runtime
     grpc = None
     aio = None
+    reflection = None
     agent_pb2 = None
     agent_pb2_grpc = None
     _IMPORT_ERROR = e
@@ -42,6 +44,17 @@ async def serve(port: int = 50051):
 
     server = aio.server()
     agent_pb2_grpc.add_AgentServiceServicer_to_server(_AgentServicer(), server)
+
+    if reflection is not None:
+        service_names = (
+            agent_pb2.DESCRIPTOR.services_by_name["AgentService"].full_name,
+            reflection.SERVICE_NAME,
+        )
+        reflection.enable_server_reflection(service_names, server)
+        print("[gRPC] Reflection enabled", flush=True)
+    else:
+        print("[gRPC] Reflection not available", flush=True)
+
     server.add_insecure_port(f"[::]:{port}")
     await server.start()
     print(f"[gRPC] Server listening on {port}", flush=True)
