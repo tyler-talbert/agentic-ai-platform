@@ -18,10 +18,26 @@ def stack():
     if shutil.which('docker') is None:
         pytest.skip('docker not available')
     subprocess.check_call(
-        _docker('up', '-d', '--no-deps', 'agent_service', 'agent_orchestrator')
+        _docker(
+            'up',
+            '-d',
+            '--no-deps',
+            'ollama',
+            'agent_service',
+            'agent_orchestrator',
+        )
     )
-    # wait briefly for services
-    time.sleep(10)
+    for _ in range(10):
+        try:
+            r = httpx.get(f"{ORCH_URL}/health", timeout=3)
+            if r.status_code == 200:
+                break
+        except Exception:
+            pass
+        time.sleep(3)
+    else:
+        subprocess.check_call(_docker('logs', 'agent_orchestrator'))
+        pytest.fail('orchestrator did not become ready')
     yield
     subprocess.check_call(_docker('down', '-v'))
 
@@ -44,7 +60,7 @@ def test_grpc_and_kafka_flow(stack):
 
     consumer = KafkaConsumer(
         'agent-tasks-completed',
-        bootstrap_servers='localhost:9092',
+        bootstrap_servers=os.getenv('KAFKA_BROKER', 'localhost:9092'),
         auto_offset_reset='earliest',
         enable_auto_commit=True,
         consumer_timeout_ms=5000,
