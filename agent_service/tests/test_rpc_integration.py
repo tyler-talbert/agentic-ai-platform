@@ -17,7 +17,9 @@ def _docker(*args):
 def stack():
     if shutil.which('docker') is None:
         pytest.skip('docker not available')
-    subprocess.check_call(_docker('up', '-d'))
+    subprocess.check_call(
+        _docker('up', '-d', '--no-deps', 'agent_service', 'agent_orchestrator')
+    )
     # wait briefly for services
     time.sleep(10)
     yield
