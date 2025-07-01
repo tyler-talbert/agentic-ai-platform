@@ -7,7 +7,7 @@ import httpx
 import pytest
 from kafka import KafkaConsumer
 
-COMPOSE_FILE = os.path.join(os.path.dirname(__file__), '..', 'docker-compose.yml')
+COMPOSE_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'docker-compose.yml')
 ORCH_URL = 'http://localhost:4000'
 
 def _docker(*args):
