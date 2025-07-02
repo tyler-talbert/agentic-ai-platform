@@ -1,0 +1,76 @@
+import os
+import subprocess
+import time
+import json
+import shutil
+import httpx
+import pytest
+import socket
+from kafka import KafkaConsumer
+
+COMPOSE_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'docker-compose.yml')
+ORCH_URL = 'http://localhost:4000'
+
+def _docker(*args):
+    return ['docker', 'compose', '-f', COMPOSE_FILE, *args]
+
+def is_port_in_use(port):
+    """Check if the given port is in use on localhost."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
+@pytest.fixture(scope="module", autouse=True)
+def stack():
+    if shutil.which('docker') is None:
+        pytest.skip('docker not available')
+
+    if is_port_in_use(9092):
+        pytest.skip('Kafka port 9092 is already in use; cannot run integration test.')
+
+    subprocess.check_call(
+        _docker(
+            'up',
+            '-d',
+        )
+    )
+
+    for _ in range(10):
+        try:
+            r = httpx.get(f"{ORCH_URL}/health", timeout=3)
+            if r.status_code == 200:
+                break
+        except Exception:
+            pass
+        time.sleep(3)
+    else:
+        subprocess.check_call(_docker('logs', 'agent_orchestrator'))
+        pytest.fail('orchestrator did not become ready')
+    yield
+    subprocess.check_call(_docker('down', '-v'))
+
+def test_grpc_and_kafka_flow(stack):
+    payload = {"input": "ping"}
+    resp = httpx.post(f"{ORCH_URL}/v1/tasks", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    task_id = data["task_id"]
+
+    start = time.time()
+    while time.time() - start < 20:
+        poll = httpx.get(f"{ORCH_URL}/v1/tasks/{task_id}")
+        if poll.status_code == 200 and poll.json().get("status") == "COMPLETED":
+            break
+        time.sleep(1)
+    else:
+        pytest.fail('task did not complete')
+
+    consumer = KafkaConsumer(
+        'agent-tasks-completed',
+        bootstrap_servers=os.getenv('KAFKA_BROKER', 'localhost:9092'),
+        auto_offset_reset='earliest',
+        enable_auto_commit=True,
+        consumer_timeout_ms=5000,
+        value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+    )
+    msgs = [m.value for m in consumer if m.value.get('task_id') == task_id]
+    assert len(msgs) == 1

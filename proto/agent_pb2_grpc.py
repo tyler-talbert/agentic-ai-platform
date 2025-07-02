@@ -13,6 +13,7 @@ class AgentServiceServicer(object):
     def RunTask(self, request, context):
         raise NotImplementedError('Method not implemented!')
 
+
 def add_AgentServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
         'RunTask': grpc.unary_unary_rpc_method_handler(

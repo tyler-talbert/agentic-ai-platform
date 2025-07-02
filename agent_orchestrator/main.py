@@ -13,7 +13,7 @@ from app.orchestrator.agent_router import router as agent_router
 from app.kafka_client.consumer import consume_kafka_results
 from app.kafka_client.producer import init_kafka_producer
 import httpx
-from app.grpc_client import run_task as grpc_run_task
+from app.grpc_client import run_task as grpc_run_task, init_stub
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -41,6 +41,9 @@ async def lifespan(app: FastAPI):
     global producer
     print("[Orchestrator] Initializing producer...")
     producer = init_kafka_producer()
+
+    print("[Orchestrator] Creating gRPC client stub...")
+    app.state.grpc_stub = await init_stub()
 
     asyncio.create_task(consume_kafka_results())
 
