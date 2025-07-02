@@ -5,8 +5,8 @@ import json
 import shutil
 import httpx
 import pytest
+import socket
 from kafka import KafkaConsumer
-
 
 COMPOSE_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'docker-compose.yml')
 ORCH_URL = 'http://localhost:4000'
@@ -14,10 +14,18 @@ ORCH_URL = 'http://localhost:4000'
 def _docker(*args):
     return ['docker', 'compose', '-f', COMPOSE_FILE, *args]
 
+def is_port_in_use(port):
+    """Check if the given port is in use on localhost."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
 @pytest.fixture(scope="module", autouse=True)
 def stack():
     if shutil.which('docker') is None:
         pytest.skip('docker not available')
+
+    if is_port_in_use(9092):
+        pytest.skip('Kafka port 9092 is already in use; cannot run integration test.')
 
     subprocess.check_call(
         _docker(
@@ -39,7 +47,6 @@ def stack():
         pytest.fail('orchestrator did not become ready')
     yield
     subprocess.check_call(_docker('down', '-v'))
-
 
 def test_grpc_and_kafka_flow(stack):
     payload = {"input": "ping"}
