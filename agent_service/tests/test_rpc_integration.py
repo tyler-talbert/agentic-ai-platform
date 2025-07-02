@@ -7,6 +7,7 @@ import httpx
 import pytest
 from kafka import KafkaConsumer
 
+
 COMPOSE_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'docker-compose.yml')
 ORCH_URL = 'http://localhost:4000'
 
@@ -17,16 +18,14 @@ def _docker(*args):
 def stack():
     if shutil.which('docker') is None:
         pytest.skip('docker not available')
+
     subprocess.check_call(
         _docker(
             'up',
             '-d',
-            '--no-deps',
-            'ollama',
-            'agent_service',
-            'agent_orchestrator',
         )
     )
+
     for _ in range(10):
         try:
             r = httpx.get(f"{ORCH_URL}/health", timeout=3)
