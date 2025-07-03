@@ -39,6 +39,19 @@ grpcurl -plaintext \
   localhost:50051 agent.AgentService/RunTask
 ~~~
 
+If the command fails with `server does not support the reflection API`, rebuild
+the Docker images so the `grpcio-reflection` dependency is installed:
+
+~~~bash
+docker compose up --build
+~~~
+
+For Windows **cmd.exe**, run the command on a single line and escape the JSON quotes:
+
+~~~cmd
+.\grpcurl.exe -plaintext -d '{\"task_id\":\"123\",\"payload\":\"ping\"}' localhost:50051 agent.AgentService/RunTask
+~~~
+
 Expect a `COMPLETED` reply with the LLM output.
 
 ---
