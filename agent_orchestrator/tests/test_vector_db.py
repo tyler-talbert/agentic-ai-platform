@@ -65,3 +65,6 @@ class TestVectorRetriever(unittest.TestCase):
         self.assertEqual(len(contexts), 1)
         self.assertEqual(contexts[0]['id'], 'q1-a')
         self.assertAlmostEqual(contexts[0]['score'], 0.95)
+
+if __name__ == '__main__':
+    unittest.main()
