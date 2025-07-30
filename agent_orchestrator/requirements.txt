@@ -7,3 +7,4 @@ structlog
 pinecone-client==3.2.2
 grpcio
 grpcio-tools
+grpcio-reflection
