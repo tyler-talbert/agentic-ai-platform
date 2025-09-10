@@ -1,0 +1,33 @@
+name: Bug report
+description: Create a report to help us improve
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Steps to reproduce the behavior.
+      placeholder: 1) Go to ..., 2) Click ..., 3) Observe ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / git SHA
+      placeholder: e.g. main @ 123abc
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Please paste logs or stack traces. Use backticks for code blocks.
+      render: shell
+
