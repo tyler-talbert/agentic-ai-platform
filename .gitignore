@@ -3,3 +3,24 @@ __pycache__/
 *.pyo
 *.egg-info/
 pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE/editor settings
+.idea/
+.vscode/
+
+# Environment files
+.env
+**/.env
+
+# Logs and local files
+*.log
+log.txt
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
