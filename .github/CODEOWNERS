@@ -1,0 +1,6 @@
+# Default owners
+* @tyler-talbert
+
+# Service-specific (examples, adjust as needed)
+agent_service/** @tyler-talbert
+agent_orchestrator/** @tyler-talbert
