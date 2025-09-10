@@ -1,0 +1,26 @@
+# Git & VCS
+.git
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Virtual envs
+.venv/
+venv/
+
+# Environment & secrets
+.env
+**/.env
+
+# IDE
+.idea/
+.vscode/
+
+# Cache & logs
+pytest_cache/
+*.log
+logs/
+log.txt
