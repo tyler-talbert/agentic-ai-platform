@@ -24,3 +24,9 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Tool caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.python-version
