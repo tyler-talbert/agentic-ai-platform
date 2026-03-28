@@ -3,7 +3,7 @@
 # 🧠 Agentic AI Platform — Real-Time RAG & Orchestration Spike
 
 Two Docker-compose services that showcase **Retrieval-Augmented Generation (RAG)** with local LLMs, Pinecone vector search, a 768 → 256 auto-encoder for compressed embeddings, and Kafka-based task orchestration.  
-Built as an interview-ready spike to demonstrate FAANG-calibre architectural thinking.
+Built to demonstrate high calibre architectural thinking.
 
 ---
 
