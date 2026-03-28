@@ -125,7 +125,7 @@ CI launches Zookeeper, Kafka, Ollama (model preload), both services, then runs u
 
 ## 🙋‍♂️ Author
 
-**Tyler Talbert** — Senior SWE @ Visa  
+**Tyler Talbert** — Senior SWE @ Apple  
 [LinkedIn](https://www.linkedin.com/in/tylertal) • [GitHub](https://github.com/tyler-talbert)
 
 > This spike is intentionally light—see **docs/tradeoffs.md** for deferred items.
